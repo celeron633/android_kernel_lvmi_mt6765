@@ -15,11 +15,12 @@
 enum LCM_DSI_MODE_CON lcm_dsi_mode;
 
 /*
- * LCM driver list for the Cubot P50. A driver is listed here when its
- * directory is added to LCM_LISTS in drivers/misc/mediatek/lcm/Makefile
- * (CONFIG_CUSTOM_KERNEL_LCM plus the two Haifei panels).
+ * Drivers selected by CONFIG_CUSTOM_KERNEL_LCM in the LCM Makefile.
  */
 struct LCM_DRIVER *lcm_driver_list[] = {
+#if defined(AXS15260_DSI_6580_HD)
+	&axs15260_dsi_6580_hd_lcm_drv,
+#endif
 #if defined(ILI9881H_HJC6217_HAIFEI_HDPLUS1520)
 	&ili9881h_hjc6217_haifei_hdplus1520_lcm_drv,
 #endif
@@ -38,6 +39,9 @@ struct LCM_DRIVER *lcm_driver_list[] = {
 };
 
 unsigned char lcm_name_list[][128] = {
+#if defined(AXS15260_DSI_6580_HD)
+	"axs15260_dsi_6580_hd",
+#endif
 #if defined(ILI9881H_HJC6217_HAIFEI_HDPLUS1520)
 	"ili9881h_hjc6217_haifei_hdplus1520_drv",
 #endif

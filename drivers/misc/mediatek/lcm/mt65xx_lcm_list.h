@@ -9,7 +9,8 @@
 
 #include <lcm_drv.h>
 
-/* LCM drivers compiled for the Cubot P50 (see drivers/misc/mediatek/lcm/Makefile) */
+/* LCM drivers selected by CONFIG_CUSTOM_KERNEL_LCM. */
+extern struct LCM_DRIVER axs15260_dsi_6580_hd_lcm_drv;
 extern struct LCM_DRIVER ili9881h_hjc6217_haifei_hdplus1520_lcm_drv;
 extern struct LCM_DRIVER icnl9911_boe621_haifei_lhd_lcm_drv;
 extern struct LCM_DRIVER nt35695_fhd_dsi_vdo_truly_rt5081_hdp_lcm_drv;
