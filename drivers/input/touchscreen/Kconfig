@@ -1363,4 +1363,12 @@ config TOUCHSCREEN_MTK_TOUCH
 
 	  To compile this dirver for used touch IC.
 
+config TOUCHSCREEN_MTK_AXS
+	bool "S17Promini AXS15260 touch bringup"
+	depends on I2C && MACH_MT6765
+	help
+	  Basic I2C report support for the S17Promini AXS15260. Uses the
+	  controller's existing firmware and coordinates reset with the LCM.
+	  Firmware upgrade and gesture wake support are not implemented yet.
+
 endif

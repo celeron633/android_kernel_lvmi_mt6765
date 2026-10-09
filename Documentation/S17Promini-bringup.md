@@ -77,7 +77,7 @@ unused argument under `-Werror`. Full kernel compiler/linker work is separate.
 | Stock component | Current status |
 | --- | --- |
 | AXS15260 LCM | Reconstructed and registered; LCM subtree compiled. See `S17Promini-axs15260.md`. Device validation pending. |
-| AXS touchscreen | `TOUCHSCREEN_MTK_AXS` absent. MTK touch selection is empty; ILITEK is not selected as a substitute. |
+| AXS touchscreen | Basic reports added under `TOUCHSCREEN_MTK_AXS`; object compiled. Firmware upgrade and real input validation pending; see `S17Promini-axs-touch.md`. |
 | PSC5425E charger | `CHARGER_PSC5425E` absent. Original DT node preserved; MT6370 is not enabled as a substitute. |
 | WUSB3801 Type-C | WUSB3801X source exists, but remains disabled pending binding/driver review: stock node `wusb3801@60`, compatible `mediatek,usb_type_c`; driver searches `usb_type_c_wusb3801x` and matches `mediatek,usb_type_c_wusb3801`. |
 | IMX278 camera | Driver absent; stock sensor string preserved for later camera work. GC5025sub source exists. |

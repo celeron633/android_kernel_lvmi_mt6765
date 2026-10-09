@@ -17,3 +17,20 @@
 &{/i2c5@11016000/lcm_i2c@3e} {
 	touch-reset-gpios = <&{/pinctrl@1000b000} 174 0>;
 };
+
+/* Stock probe forcibly replaces the BSP address 0x38 with 0x3b. */
+&{/i2c0@11007000} {
+	/delete-node/ touch@38;
+	axs15260@3b {
+		compatible = "lvmi,s17promini-axs15260";
+		reg = <0x3b>;
+		interrupt-parent = <&{/pinctrl@1000b000}>;
+		interrupts = <0 2>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&{/pinctrl@1000b000/eint@0}>;
+		vtouch-supply = <&{/pwrap@1000d000/main_pmic/mt6357regulator/ldo_vldo28}>;
+		/* Match stock inclusive input axis maxima 384 and 854. */
+		touchscreen-size-x = <385>;
+		touchscreen-size-y = <855>;
+	};
+};
