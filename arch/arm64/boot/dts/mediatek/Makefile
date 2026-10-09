@@ -1,6 +1,10 @@
+ifeq ($(CONFIG_ARCH_MTK_PROJECT),"r65v3_pmz_w1a")
+dtb-$(CONFIG_ARCH_MEDIATEK) += S17Promini.dtb
+else
 dtb-$(CONFIG_ARCH_MEDIATEK) += auto2712p1v1-ivi-boot.dtb
 dtb-$(CONFIG_ARCH_MEDIATEK) += auto2712p1v1-ivi-nand-boot.dtb
 dtb-$(CONFIG_ARCH_MEDIATEK) += cubot_marlon.dtb
+endif
 
 #ifdef  VENDOR_EDIT
 ifeq ($(strip $(CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE)), y)

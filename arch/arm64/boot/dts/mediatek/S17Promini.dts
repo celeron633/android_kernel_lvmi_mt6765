@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/dts-v1/;
+
+#include "s17promini-stock.dtsi"
+
+/ {
+	model = "LVMI S17 Pro mini";
+	compatible = "lvmi,s17promini", "mediatek,MT6765";
+};
+
+/* LK logs identify the actual panel; the stock DTBO name is a BSP default. */
+&{/chosen} {
+	atag,videolfb-lcmname = "axs15260_dsi_6580_hd";
+};
