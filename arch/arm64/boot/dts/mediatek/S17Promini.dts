@@ -12,3 +12,8 @@
 &{/chosen} {
 	atag,videolfb-lcmname = "axs15260_dsi_6580_hd";
 };
+
+/* GPIO 174 is the separate AXS touch reset in stock pinctrl and LK. */
+&{/i2c5@11016000/lcm_i2c@3e} {
+	touch-reset-gpios = <&{/pinctrl@1000b000} 174 0>;
+};
