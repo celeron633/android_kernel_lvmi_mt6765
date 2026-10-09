@@ -3,7 +3,6 @@ source "drivers/power/reset/Kconfig"
 source "drivers/power/supply/Kconfig"
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
-source "drivers/power/oplus/Kconfig"
 
 config OPLUS_CHARGER
 	bool "OPLUS_CHARGER"
@@ -27,7 +26,6 @@ config OPLUS_CHARGER_MTK_CHGIC
 	help
 	  Say Yes to use MTK platform charger ic
 	  Say No to use extern charger ic
-
 
 config OPLUS_CHARGER_MTK6779R
 	bool "OPLUS_CHARGER_MTK6779"

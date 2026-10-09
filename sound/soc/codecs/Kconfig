@@ -1360,7 +1360,3 @@ config SND_SOC_RT5509
 	  be set to yes if device with RT5509 on it.
 
 endmenu
-
-#ifdef OPLUS_ARCH_EXTENDS
-source "sound/soc/codecs/audio/Kconfig"
-#endif /* OPLUS_ARCH_EXTENDS */
