@@ -392,10 +392,10 @@ void mt_gpufreq_enable_MTCMOS(bool bEnableHWAPM)
 	if (s17_power_reports++ < 4)
 		pr_info("[S17/GPU] MTCMOS enabled: rate=%lu mux=%d async=%d mfg=%d core0=%d hw_apm=%d\n",
 			clk_get_rate(g_clk->clk_mux),
-			clk_is_enabled(g_clk->clk_mux),
-			clk_is_enabled(g_clk->mtcmos_mfg_async),
-			clk_is_enabled(g_clk->mtcmos_mfg),
-			clk_is_enabled(g_clk->mtcmos_mfg_core0), bEnableHWAPM);
+			__clk_is_enabled(g_clk->clk_mux),
+			__clk_is_enabled(g_clk->mtcmos_mfg_async),
+			__clk_is_enabled(g_clk->mtcmos_mfg),
+			__clk_is_enabled(g_clk->mtcmos_mfg_core0), bEnableHWAPM);
 
 }
 EXPORT_SYMBOL(mt_gpufreq_enable_MTCMOS);
