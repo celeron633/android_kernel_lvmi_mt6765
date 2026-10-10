@@ -8,6 +8,7 @@
 #include <linux/errno.h>
 #include <linux/gpio/consumer.h>
 #include <linux/i2c.h>
+#include <linux/input/axs15260_s17.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
@@ -115,8 +116,10 @@ static void reset_panel(void)
 }
 
 /* Stock axs_reset_proc(20), confirmed by LK GPIO 174 sequencing too. */
-static int reset_touch(void)
+int s17_axs15260_reset_touch(unsigned int settle_ms)
 {
+	if (settle_ms < 20 || settle_ms > 200)
+		return -EINVAL;
 	mutex_lock(&bias_lock);
 	if (!touch_reset_gpio) {
 		mutex_unlock(&bias_lock);
@@ -127,10 +130,113 @@ static int reset_touch(void)
 	gpiod_set_value_cansleep(touch_reset_gpio, 0);
 	usleep_range(10000, 11000);
 	gpiod_set_value_cansleep(touch_reset_gpio, 1);
-	msleep(20);
+	msleep(settle_ms);
 	mutex_unlock(&bias_lock);
 	return 0;
 }
+EXPORT_SYMBOL_GPL(s17_axs15260_reset_touch);
+
+/* Stock selectPram: keep GPIO174 low while sending A5 5A B5 AB 01.
+ * Hold its owner lock through download so an LCM reset cannot interrupt it.
+ * A successful PRAM download must not be followed by another hardware reset.
+ */
+int s17_axs15260_pram_session(
+	int (*write_mode)(void *data, const u8 *buf, unsigned int len),
+	int (*download)(void *data), void *data)
+{
+	static const u8 select_pram[] = { 0xa5, 0x5a, 0xb5, 0xab, 1 };
+	int ret;
+
+	if (!write_mode || !download)
+		return -EINVAL;
+	mutex_lock(&bias_lock);
+	if (!touch_reset_gpio) {
+		ret = -ENODEV;
+		goto out;
+	}
+	gpiod_set_value_cansleep(touch_reset_gpio, 0);
+	usleep_range(1000, 1100);
+	ret = write_mode(data, select_pram, sizeof(select_pram));
+	gpiod_set_value_cansleep(touch_reset_gpio, 1);
+	if (ret)
+		goto recover;
+	usleep_range(15000, 16000);
+	ret = download(data);
+	if (!ret)
+		goto out;
+recover:
+	/* A failed download is unusable; release reset in a defined state. */
+	gpiod_set_value_cansleep(touch_reset_gpio, 0);
+	usleep_range(10000, 11000);
+	gpiod_set_value_cansleep(touch_reset_gpio, 1);
+	msleep(20);
+out:
+	mutex_unlock(&bias_lock);
+	return ret;
+}
+EXPORT_SYMBOL_GPL(s17_axs15260_pram_session);
+
+/* Stock selectFlash handshake and serialized caller operation.
+ * Exit with the stock 120ms reset settle; opcode policy belongs to the caller.
+ */
+static int flash_session(
+	int (*write_mode)(void *data, const u8 *buf, unsigned int len),
+	int (*run)(void *data), int (*check_version)(void *data), void *data)
+{
+	static const u8 select_flash[] = { 0xa5, 0x5a, 0xb5, 0xab, 0 };
+	int ret;
+
+	if (!write_mode || !run)
+		return -EINVAL;
+	mutex_lock(&bias_lock);
+	if (!touch_reset_gpio) {
+		ret = -ENODEV;
+		goto out;
+	}
+	gpiod_set_value_cansleep(touch_reset_gpio, 0);
+	usleep_range(1000, 1100);
+	ret = write_mode(data, select_flash, sizeof(select_flash));
+	gpiod_set_value_cansleep(touch_reset_gpio, 1);
+	if (!ret) {
+		usleep_range(1000, 1100);
+		ret = run(data);
+	}
+	gpiod_set_value_cansleep(touch_reset_gpio, 0);
+	usleep_range(10000, 11000);
+	gpiod_set_value_cansleep(touch_reset_gpio, 1);
+	msleep(120);
+	if (!ret && check_version)
+		ret = check_version(data);
+out:
+	mutex_unlock(&bias_lock);
+	return ret;
+}
+
+int s17_axs15260_flash_session(
+	int (*write_mode)(void *data, const u8 *buf, unsigned int len),
+	int (*run)(void *data), void *data)
+{
+	return flash_session(write_mode, run, NULL, data);
+}
+EXPORT_SYMBOL_GPL(s17_axs15260_flash_session);
+
+int s17_axs15260_flash_repair_session(
+	int (*write_mode)(void *data, const u8 *buf, unsigned int len),
+	int (*run)(void *data), int (*check_version)(void *data), void *data)
+{
+	if (!check_version)
+		return -EINVAL;
+	return flash_session(write_mode, run, check_version, data);
+}
+EXPORT_SYMBOL_GPL(s17_axs15260_flash_repair_session);
+
+int s17_axs15260_flash_read_session(
+	int (*write_mode)(void *data, const u8 *buf, unsigned int len),
+	int (*read_flash)(void *data), void *data)
+{
+	return s17_axs15260_flash_session(write_mode, read_flash, data);
+}
+EXPORT_SYMBOL_GPL(s17_axs15260_flash_read_session);
 
 static void set_util_funcs(const struct LCM_UTIL_FUNCS *util)
 {
@@ -169,7 +275,7 @@ static void lcm_init(void)
 	if (bias_enable())
 		return;
 	/* Display and touch share this TDDI; this is a reset, not just a delay. */
-	if (reset_touch())
+	if (s17_axs15260_reset_touch(20))
 		return;
 	reset_panel();
 	push_table(init_setting, ARRAY_SIZE(init_setting));
