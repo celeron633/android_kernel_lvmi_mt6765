@@ -1012,6 +1012,9 @@ PVRSRV_ERROR RGXProcessFWImage(const void *hPrivate,
 		{
 			/* To get a pointer to the bootloader configuration data start from a pointer to the FW image... */
 			IMG_UINT64 *pui64BootConfig = (IMG_UINT64 *) pvFWData;
+#if defined(CONFIG_MTK_RGX_MIPS_BOOT_DATA_EXTENDED)
+			IMG_UINT32 *pui32BootConfig;
+#endif
 
 			/* ... jump to the boot/NMI data page... */
 			pui64BootConfig += RGXMIPSFW_GET_OFFSET_IN_QWORDS(RGXGetFWImageSectionOffset(NULL, MIPS_BOOT_DATA));
@@ -1028,6 +1031,17 @@ PVRSRV_ERROR RGXProcessFWImage(const void *hPrivate,
 			/* MIPS Stack Pointer Physical Address */
 			pui64BootConfig[RGXMIPSFW_STACKPOINTER_PHYADDR_OFFSET] = puFWParams->sMips.sFWStackAddr.uiAddr;
 
+
+#if defined(CONFIG_MTK_RGX_MIPS_BOOT_DATA_EXTENDED)
+			/* Only the first PT address is used for a contiguous allocation. */
+			pui64BootConfig[3] = 0;
+			pui64BootConfig[4] = 0;
+			pui64BootConfig[5] = 0;
+			pui32BootConfig = (IMG_UINT32 *)pui64BootConfig;
+			pui32BootConfig[RGXMIPSFW_PT_LOG2_PAGE_SIZE_DWORD_OFFSET] =
+				puFWParams->sMips.ui32FWPageTableLog2PageSize;
+			pui32BootConfig[RGXMIPSFW_PT_NUM_PAGES_DWORD_OFFSET] = 1;
+#endif
 			/* Reserved for future use */
 			pui64BootConfig[RGXMIPSFW_RESERVED_FUTURE_OFFSET] = 0;
 		}

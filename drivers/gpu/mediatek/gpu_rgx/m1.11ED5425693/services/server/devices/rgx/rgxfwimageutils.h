@@ -75,6 +75,9 @@ typedef union _RGX_FW_BOOT_PARAMS_
 		IMG_DEV_PHYADDR sGPURegAddr;
 		IMG_DEV_PHYADDR sFWPageTableAddr;
 		IMG_DEV_PHYADDR sFWStackAddr;
+#if defined(CONFIG_MTK_RGX_MIPS_BOOT_DATA_EXTENDED)
+		IMG_UINT32 ui32FWPageTableLog2PageSize;
+#endif
 	} sMips;
 } RGX_FW_BOOT_PARAMS;
 
