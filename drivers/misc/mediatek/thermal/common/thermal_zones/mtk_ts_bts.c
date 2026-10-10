@@ -563,8 +563,6 @@ static __s16 mtk_ts_bts_volt_to_temp(__u32 dwVolt)
 	return BTS_TMP;
 }
 
-extern bool is_kthread_get_adc(void);
-extern int get_flash_ntc_volt(void);
 static int get_hw_bts_temp(void)
 {
 
@@ -579,14 +577,11 @@ static int get_hw_bts_temp(void)
 #endif
 
 #if defined(CONFIG_MEDIATEK_MT6577_AUXADC)
-	if (!is_kthread_get_adc()) {
-		ret = iio_read_channel_processed(thermistor_ch0, &val);
-		if (ret < 0) {
-			mtkts_bts_printk("Busy/Timeout, IIO ch read failed %d\n", ret);
-			return ret;
-		}
-	} else
-		val = get_flash_ntc_volt();
+	ret = iio_read_channel_processed(thermistor_ch0, &val);
+	if (ret < 0) {
+		mtkts_bts_printk("Busy/Timeout, IIO ch read failed %d\n", ret);
+		return ret;
+	}
 
 	/* NOT need to do the conversion "val * 1500 / 4096" */
 	/* iio_read_channel_processed can get mV immediately */

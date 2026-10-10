@@ -23,7 +23,6 @@ ccflags-y  += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/
 ccflags-y  += -I$(srctree)/drivers/misc/mediatek/imgsensor/inc/
 ccflags-y  += -I$(srctree)/drivers/gpu/mediatek/gpufreq/include/
 
-obj-$(CONFIG_THERMAL) += oplus_ts_tempntc.o
 
 ifneq (,$(filter $(CONFIG_MTK_LEGACY_THERMAL_PLATFORM), "mt6779"))
 obj-$(CONFIG_THERMAL) += mtk_ts_battery.o

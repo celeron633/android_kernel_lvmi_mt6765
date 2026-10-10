@@ -4360,6 +4360,7 @@ btf_get_prog_ctx_type(struct bpf_verifier_log *log, struct btf *btf,
 	return ctx_type;
 }
 
+#ifdef CONFIG_DEBUG_INFO_BTF
 static const struct bpf_map_ops * const btf_vmlinux_map_ops[] = {
 #define BPF_PROG_TYPE(_id, _name, prog_ctx_type, kern_ctx_type)
 #define BPF_LINK_TYPE(_id, _name)
@@ -4395,6 +4396,8 @@ static int btf_vmlinux_map_ids_init(const struct btf *btf,
 	return 0;
 }
 
+#endif
+
 static int btf_translate_to_vmlinux(struct bpf_verifier_log *log,
 				     struct btf *btf,
 				     const struct btf_type *t,
@@ -4415,6 +4418,9 @@ BTF_ID(struct, bpf_ctx_convert)
 
 struct btf *btf_parse_vmlinux(void)
 {
+#ifndef CONFIG_DEBUG_INFO_BTF
+	return ERR_PTR(-ENOENT);
+#else
 	struct btf_verifier_env *env = NULL;
 	struct bpf_verifier_log *log;
 	struct btf *btf = NULL;
@@ -4479,6 +4485,7 @@ errout:
 		kfree(btf);
 	}
 	return ERR_PTR(err);
+#endif
 }
 
 #ifdef CONFIG_DEBUG_INFO_BTF_MODULES

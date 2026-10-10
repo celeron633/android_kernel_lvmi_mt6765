@@ -578,8 +578,6 @@ static __s16 mtk_ts_btsmdpa_volt_to_temp(__u32 dwVolt)
 }
 
 extern int thermal_pm_event;
-extern int get_pa_ntc_volt(void);
-extern bool is_kthread_get_adc(void);
 static int get_hw_btsmdpa_temp(void)
 {
 #if defined(CONFIG_MEDIATEK_MT6577_AUXADC)
@@ -601,16 +599,12 @@ static int get_hw_btsmdpa_temp(void)
 #endif
 
 #if defined(CONFIG_MEDIATEK_MT6577_AUXADC)
-	if (!is_kthread_get_adc()) {
-		ret = iio_read_channel_processed(thermistor_ch1, &val);
-		mtkts_btsmdpa_dprintk("%s val=%d\n", __func__, val);
-
-		if (ret < 0) {
-			mtkts_btsmdpa_printk("IIO channel read failed %d\n", ret);
-			return ret;
-		}
-	} else
-		val = get_pa_ntc_volt();
+	ret = iio_read_channel_processed(thermistor_ch1, &val);
+	mtkts_btsmdpa_dprintk("%s val=%d\n", __func__, val);
+	if (ret < 0) {
+		mtkts_btsmdpa_printk("IIO channel read failed %d\n", ret);
+		return ret;
+	}
 
 	/* NOT need to do the conversion "val * 1500 / 4096" */
 	/* iio_read_channel_processed can get mV immediately */

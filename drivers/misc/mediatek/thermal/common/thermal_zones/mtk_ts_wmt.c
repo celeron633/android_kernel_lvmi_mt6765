@@ -23,7 +23,6 @@
 #include <linux/slab.h>
 #include <linux/sched/task.h>
 #include <linux/sched/signal.h>
-#include <soc/oplus/system/oppo_project.h>
 /*=============================================================
  *Weak functions
  *=============================================================
@@ -789,10 +788,7 @@ struct thermal_cooling_device *cool_dev, unsigned long v)
 		/* To trigger data abort to reset the system
 		 * for thermal protection.
 		 */
-		if (get_eng_version() != HIGH_TEMP_AGING)
-			BUG();
-		else
-			wmt_tm_printk("should reset but bypass \n");
+		BUG();
 	}
 
 	return 0;
