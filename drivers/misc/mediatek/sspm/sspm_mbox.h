@@ -30,4 +30,8 @@ extern int sspm_mbox_polling(unsigned int mbox, unsigned int irq,
 	unsigned int slot, unsigned int *retdata, unsigned int retlen,
 	unsigned int retries);
 
+/* Temporary S17 polling diagnostics. */
+extern bool s17_mbox_observe;
+extern void sspm_mbox_s17_snapshot(void);
+
 #endif

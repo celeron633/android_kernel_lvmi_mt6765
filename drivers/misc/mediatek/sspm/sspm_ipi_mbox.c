@@ -10,6 +10,8 @@
 #include <linux/atomic.h>
 #include <linux/io.h>
 #include <linux/sched/clock.h>
+#include <linux/workqueue.h>
+#include <linux/cpu.h>
 
 #include "sspm_define.h"
 #include "sspm_common.h"
@@ -709,6 +711,30 @@ int sspm_ipi_send_ack_ex(int mid, void *data, int retslot)
 }
 EXPORT_SYMBOL_GPL(sspm_ipi_send_ack_ex);
 
+/* Temporary S17 cluster-on observer: never takes the sender's locks or MMIO. */
+static unsigned int s17_poll_phase;
+static int s17_poll_remaining;
+static int s17_sender_cpu;
+static int s17_observer_cpu;
+static unsigned int s17_observer_count;
+static bool s17_observer_armed;
+static void s17_poll_observe(struct work_struct *work);
+static DECLARE_DELAYED_WORK(s17_poll_observer, s17_poll_observe);
+
+static void s17_poll_observe(struct work_struct *work)
+{
+	unsigned int phase = READ_ONCE(s17_poll_phase);
+
+	pr_info("[S17/IPI] observer sample=%u sender_cpu=%d observer_cpu=%u phase=%u remaining=%d irqack=%d\n",
+		s17_observer_count, s17_sender_cpu, raw_smp_processor_id(),
+		phase, READ_ONCE(s17_poll_remaining),
+		atomic_read(&lock_ack[IPI_ID_CPU_DVFS]));
+	sspm_mbox_s17_snapshot();
+	if (++s17_observer_count < 4 && phase != 5)
+		schedule_delayed_work_on(s17_observer_cpu, &s17_poll_observer,
+			msecs_to_jiffies(s17_observer_count == 1 ? 80 : 1000));
+}
+
 int sspm_ipi_send_sync(int mid, int opts, void *buffer, int slot,
 						   void *retbuf, int retslot)
 {
@@ -717,6 +743,12 @@ int sspm_ipi_send_sync(int mid, int opts, void *buffer, int slot,
 	int mbno, ret;
 	struct _pin_send *pin;
 	struct _mbox_info *mbox;
+	bool trace_cpu = mid == IPI_ID_CPU_DVFS;
+	bool observe_cluster = false;
+
+	if (trace_cpu)
+		pr_info("[S17/IPI] sync entry initialized=%d mid=%d opts=%d words=%d ackwords=%d\n",
+			sspm_ipi_inited, mid, opts, slot, retslot);
 
 	if (sspm_ipi_inited == 0)
 		return IPI_SERVICE_NOT_INITED;
@@ -724,6 +756,7 @@ int sspm_ipi_send_sync(int mid, int opts, void *buffer, int slot,
 	/* check if mid is in the predefined range */
 	if ((mid < 0) || (mid >= TOTAL_SEND_PIN))
 		return IPI_SERVICE_NOT_AVAILABLE;
+
 
 	/* get the predefined pin info from mid */
 	pin = &(send_pintable[mid]);
@@ -733,7 +766,29 @@ int sspm_ipi_send_sync(int mid, int opts, void *buffer, int slot,
 	/* check if IPI can be send in different mode */
 	if (opts&IPI_OPT_POLLING) {  /* POLLING mode */
 
+		if (trace_cpu)
+			pr_info("[S17/IPI] polling lock begin\n");
 		spin_lock_irqsave(&lock_polling[mid], flags);
+		/* Arm once with the sender CPU fixed by the polling lock; command 2 is cluster-on/off. */
+		if (trace_cpu && buffer && slot >= 3 &&
+		    ((u32 *)buffer)[0] == 2 && ((u32 *)buffer)[2] == 1 &&
+		    !s17_observer_armed) {
+			s17_sender_cpu = raw_smp_processor_id();
+			s17_observer_cpu = cpumask_any_but(cpu_online_mask, s17_sender_cpu);
+			if (s17_observer_cpu < nr_cpu_ids) {
+				s17_observer_armed = true;
+				observe_cluster = true;
+				WRITE_ONCE(s17_poll_phase, 0);
+				WRITE_ONCE(s17_mbox_observe, true);
+				pr_info("[S17/IPI] observer armed sender_cpu=%d worker_cpu=%d\n",
+					s17_sender_cpu, s17_observer_cpu);
+				schedule_delayed_work_on(s17_observer_cpu, &s17_poll_observer,
+					msecs_to_jiffies(20));
+			}
+		}
+
+		if (trace_cpu)
+			pr_info("[S17/IPI] polling lock acquired\n");
 
 		if (mutex_is_locked(&pin->mutex_send)) {
 			spin_unlock_irqrestore(&lock_polling[mid], flags);
@@ -764,7 +819,12 @@ int sspm_ipi_send_sync(int mid, int opts, void *buffer, int slot,
 
 	atomic_set(&lock_ack[mid], 0);
 	/* send IPI data to SSPM */
+	if (trace_cpu)
+		pr_info("[S17/IPI] mailbox send begin mbox=%d slot=%u irqbit=%d\n",
+			mbno, pin->slot, mid - mbox->start);
 	ret = sspm_mbox_send(mbno, pin->slot, mid - mbox->start, buffer, slot);
+	if (trace_cpu)
+		pr_info("[S17/IPI] mailbox send returned=%d\n", ret);
 	if (ret != 0) {
 #ifdef IPI_MONITOR
 		ipimon[mid].seqno--;
@@ -785,10 +845,27 @@ int sspm_ipi_send_sync(int mid, int opts, void *buffer, int slot,
 	/* wait ACK from SSPM */
 	if (opts&IPI_OPT_POLLING) { /* POLLING mode */
 		int retries = 2000000;
+		bool trace_step;
+
+		if (trace_cpu)
+			pr_info("[S17/IPI] ACK polling begin\n");
 
 		while (retries-- > 0) {
+			trace_step = trace_cpu && (retries >= 1999998 ||
+				retries == 1999900 || retries == 1900000 ||
+				retries == 1000000 || retries == 0);
+			if (trace_step)
+				pr_info("[S17/IPI] mailbox poll enter remaining=%d\n", retries);
+			if (observe_cluster) {
+				WRITE_ONCE(s17_poll_remaining, retries);
+				WRITE_ONCE(s17_poll_phase, 1);
+			}
 			ret = sspm_mbox_polling(mbno, mid - mbox->start,
 					pin->slot, retbuf, retslot, 2000);
+			if (observe_cluster)
+				WRITE_ONCE(s17_poll_phase, 2);
+			if (trace_step)
+				pr_info("[S17/IPI] mailbox poll returned=%d remaining=%d\n", ret, retries);
 
 			if (!ret)
 				break;
@@ -801,7 +878,22 @@ int sspm_ipi_send_sync(int mid, int opts, void *buffer, int slot,
 				ret = 0;
 				break;
 			}
+			if (trace_step)
+				pr_info("[S17/IPI] delay enter remaining=%d\n", retries);
+			if (observe_cluster)
+				WRITE_ONCE(s17_poll_phase, 3);
 			udelay(1);
+			if (observe_cluster)
+				WRITE_ONCE(s17_poll_phase, 4);
+			if (trace_step)
+				pr_info("[S17/IPI] delay returned remaining=%d\n", retries);
+		}
+		if (trace_cpu)
+			pr_info("[S17/IPI] ACK polling ended ret=%d remaining=%d irqack=%d\n",
+				ret, retries, atomic_read(&lock_ack[mid]));
+		if (observe_cluster) {
+			WRITE_ONCE(s17_poll_phase, 5);
+			WRITE_ONCE(s17_mbox_observe, false);
 		}
 		atomic_set(&lock_ack[mid], 0);
 

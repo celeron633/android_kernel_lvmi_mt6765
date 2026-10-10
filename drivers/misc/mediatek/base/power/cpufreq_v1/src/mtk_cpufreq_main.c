@@ -959,7 +959,9 @@ static int _sync_opp_tbl_idx(struct mt_cpu_dvfs *p)
 	int i;
 	struct pll_ctrl_t *pll_p = id_to_pll_ctrl(p->Pll_id);
 
+	tag_pr_info("[S17/DVFS] sync %s PLL read begin\n", p->name);
 	freq = pll_p->pll_ops->get_cur_freq(pll_p);
+	tag_pr_info("[S17/DVFS] sync %s PLL read done=%u\n", p->name, freq);
 
 	for (i = p->nr_opp_tbl - 1; i >= 0; i--) {
 		if (freq <= cpu_dvfs_get_freq_by_idx(p, i))
@@ -971,7 +973,9 @@ static int _sync_opp_tbl_idx(struct mt_cpu_dvfs *p)
 		i = 0;
 
 	p->idx_opp_tbl = i;
+	tag_pr_info("[S17/DVFS] sync %s AEE record begin idx=%d\n", p->name, i);
 	aee_record_freq_idx(p, p->idx_opp_tbl);
+	tag_pr_info("[S17/DVFS] sync %s AEE record done\n", p->name);
 
 	return 0;
 }
@@ -1195,6 +1199,7 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 {
 	int ret = -EINVAL;
 	int pd_ret = -EINVAL;
+	int sync_ret;
 	unsigned long flags;
 	struct device *cpu_dev;
 	struct em_data_callback em_cb = EM_DATA_CB(of_dev_pm_opp_get_cpu_power);
@@ -1202,6 +1207,7 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 	FUNC_ENTER(FUNC_LV_MODULE);
 
 	policy->shared_type = CPUFREQ_SHARED_TYPE_ANY;
+	tag_pr_info("[S17/DVFS] policy init cpu=%u begin\n", policy->cpu);
 	cpumask_setall(policy->cpus);
 
 	cpu_dev = get_cpu_device(policy->cpu);
@@ -1211,13 +1217,16 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 	{
 		enum mt_cpu_dvfs_id id = _get_cpu_dvfs_id(policy->cpu);
 		struct mt_cpu_dvfs *p = id_to_cpu_dvfs(id);
-		unsigned int lv = _mt_cpufreq_get_cpu_level();
+		unsigned int lv;
 		struct opp_tbl_info *opp_tbl_info;
 		struct opp_tbl_m_info *opp_tbl_m_info;
 #ifndef ONE_CLUSTER
 		struct opp_tbl_m_info *opp_tbl_m_cci_info;
 		struct mt_cpu_dvfs *p_cci;
 #endif
+		tag_pr_info("[S17/DVFS] policy cpu=%u read level begin\n", policy->cpu);
+		lv = _mt_cpufreq_get_cpu_level();
+		tag_pr_info("[S17/DVFS] policy cpu=%u read level done=%u\n", policy->cpu, lv);
 
 		cpufreq_ver("DVFS: %s: %s(cpu_id = %d)\n",
 				__func__, cpu_dvfs_get_name(p), p->cpu_id);
@@ -1226,8 +1235,10 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 
 		p->cpu_level = lv;
 
+		tag_pr_info("[S17/DVFS] policy frequency table begin\n");
 		ret = _mt_cpufreq_setup_freqs_table(policy,
 		opp_tbl_info->opp_tbl, opp_tbl_info->size);
+		tag_pr_info("[S17/DVFS] policy frequency table done=%d\n", ret);
 
 		policy->cpuinfo.max_freq = cpu_dvfs_get_max_freq(p);
 		policy->cpuinfo.min_freq = cpu_dvfs_get_min_freq(p);
@@ -1235,9 +1246,13 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 		opp_tbl_m_info = &opp_tbls_m[id][lv];
 		p->freq_tbl = opp_tbl_m_info->opp_tbl_m;
 
+		tag_pr_info("[S17/DVFS] policy cpufreq lock begin\n");
 		cpufreq_lock(flags);
+		tag_pr_info("[S17/DVFS] policy cpufreq lock acquired\n");
 		/* Sync p */
-		if (_mt_cpufreq_sync_opp_tbl_idx(p) >= 0)
+		sync_ret = _mt_cpufreq_sync_opp_tbl_idx(p);
+		tag_pr_info("[S17/DVFS] CPU index sync done=%d\n", sync_ret);
+		if (sync_ret >= 0)
 			if (p->idx_normal_max_opp == -1)
 				p->idx_normal_max_opp = p->idx_opp_tbl;
 
@@ -1249,6 +1264,7 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 				p->idx_opp_ppm_base);
 		p->mt_policy = policy;
 		p->armpll_is_available = 1;
+		tag_pr_info("[S17/DVFS] CPU policy fields ready\n");
 
 		if (turbo_flag && !turbo_is_inited) {
 			turbo_is_inited = mt_cpufreq_turbo_config(id,
@@ -1262,7 +1278,10 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 			p_cci = id_to_cpu_dvfs(MT_CPU_DVFS_CCI);
 
 			/* init cci freq idx */
-			if (_mt_cpufreq_sync_opp_tbl_idx(p_cci) >= 0)
+			tag_pr_info("[S17/DVFS] CCI index sync begin\n");
+			sync_ret = _mt_cpufreq_sync_opp_tbl_idx(p_cci);
+			tag_pr_info("[S17/DVFS] CCI index sync done=%d\n", sync_ret);
+			if (sync_ret >= 0)
 				if (p_cci->idx_normal_max_opp == -1)
 					p_cci->idx_normal_max_opp =
 					p_cci->idx_opp_tbl;
@@ -1276,21 +1295,26 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 #endif
 
 #ifdef CONFIG_HYBRID_CPU_DVFS
+		tag_pr_info("[S17/DVFS] cluster on SSPM command begin\n");
 #ifdef SINGLE_CLUSTER
 		cpuhvfs_set_cluster_on_off(cpufreq_get_cluster_id(p->cpu_id),
 									1);
 #else
 		cpuhvfs_set_cluster_on_off(arch_get_cluster_id(p->cpu_id), 1);
 #endif
+		tag_pr_info("[S17/DVFS] cluster on SSPM command done\n");
 #endif
 		cpufreq_unlock(flags);
+		tag_pr_info("[S17/DVFS] policy register OPP/energy model begin\n");
 	}
 
 	if (dev_pm_opp_of_get_sharing_cpus(cpu_dev, policy->cpus))
 		tag_pr_notice("failed to share opp framework table\n");
+	tag_pr_info("[S17/DVFS] OPP sharing done\n");
 
 	if (dev_pm_opp_of_cpumask_add_table(policy->cpus))
 		tag_pr_notice("failed to add opp framework table\n");
+	tag_pr_info("[S17/DVFS] OPP add table done\n");
 
 	pd_ret = em_register_perf_domain(policy->cpus, NR_FREQ, &em_cb);
 
@@ -1583,9 +1607,9 @@ static enum cpuhp_state hp_online;
 
 static int _mt_cpufreq_pdrv_probe(struct platform_device *pdev)
 {
-	unsigned int lv = _mt_cpufreq_get_cpu_level();
+	unsigned int lv;
 	struct mt_cpu_dvfs *p;
-	int j;
+	int j, ret;
 #ifndef CONFIG_HYBRID_CPU_DVFS
 	/* For init voltage check */
 	struct buck_ctrl_t *vproc_p;
@@ -1594,6 +1618,9 @@ static int _mt_cpufreq_pdrv_probe(struct platform_device *pdev)
 #endif
 
 	FUNC_ENTER(FUNC_LV_MODULE);
+	tag_pr_info("[S17/DVFS] platform probe read level begin\n");
+	lv = _mt_cpufreq_get_cpu_level();
+	tag_pr_info("[S17/DVFS] platform probe read level done=%u\n", lv);
 	/* init proc */
 	cpufreq_procfs_init();
 	_mt_cpufreq_aee_init();
@@ -1606,6 +1633,7 @@ static int _mt_cpufreq_pdrv_probe(struct platform_device *pdev)
 #endif
 
 	mt_cpufreq_regulator_map(pdev);
+	tag_pr_info("[S17/DVFS] regulator map done\n");
 
 	/* Prepare OPP table for PPM in probe to avoid nested lock */
 	for_each_cpu_dvfs(j, p) {
@@ -1634,7 +1662,9 @@ static int _mt_cpufreq_pdrv_probe(struct platform_device *pdev)
 #endif
 	}
 
-	cpufreq_register_driver(&_mt_cpufreq_driver);
+	tag_pr_info("[S17/DVFS] cpufreq_register_driver begin\n");
+	ret = cpufreq_register_driver(&_mt_cpufreq_driver);
+	tag_pr_info("[S17/DVFS] cpufreq_register_driver done=%d\n", ret);
 
 	hp_online = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN,
 						"cpu_dvfs:online",
