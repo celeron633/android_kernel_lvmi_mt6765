@@ -533,6 +533,9 @@ PVRSRV_ERROR RGXPostPowerState(IMG_HANDLE				hDevHandle,
 			                         0xFFFFFFFF) != PVRSRV_OK)
 			{
 				PVR_DPF((PVR_DBG_ERROR, "RGXPostPowerState: Polling for 'FW started' flag failed."));
+				PVR_DPF((PVR_DBG_ERROR,
+					"[S17/GPU] FW startup failed: started=%u",
+					(unsigned int)psRGXFWInit->bFirmwareStarted));
 				eError = PVRSRV_ERROR_TIMEOUT;
 
 #if defined(TRACK_FW_BOOT)

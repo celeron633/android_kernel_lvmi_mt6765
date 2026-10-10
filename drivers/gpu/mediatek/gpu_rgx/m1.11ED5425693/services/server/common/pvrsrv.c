@@ -2977,6 +2977,13 @@ PVRSRV_ERROR IMG_CALLCONV PVRSRVDeviceFinalise(PVRSRV_DEVICE_NODE *psDeviceNode,
 					 "%s: Failed to set device %p power state to 'on' (%s)",
 					 __func__, psDeviceNode, PVRSRVGetErrorString(eError)));
 			PVRSRVPowerUnlock(psDeviceNode);
+			/* Debug callbacks acquire the power lock themselves. Dump only
+			 * after releasing it and before finalise unwinds allocations.
+			 */
+			PVR_DPF((PVR_DBG_ERROR, "[S17/GPU] Initial power-on failed; device debug dump begin"));
+			PVRSRVDebugRequest(psDeviceNode,
+				DEBUG_REQUEST_VERBOSITY_MAX, NULL, NULL);
+			PVR_DPF((PVR_DBG_ERROR, "[S17/GPU] Device debug dump end"));
 			goto ErrorExit;
 		}
 

@@ -363,6 +363,8 @@ EXPORT_SYMBOL(mt_gpufreq_target);
  */
 void mt_gpufreq_enable_MTCMOS(bool bEnableHWAPM)
 {
+	static unsigned int s17_power_reports;
+
 	/* enable PLL and set clk_mux to mfgpll */
 	if (clk_prepare_enable(g_clk->clk_mux))
 		gpufreq_perr("@%s: failed when enable top-clk\n",
@@ -386,6 +388,15 @@ void mt_gpufreq_enable_MTCMOS(bool bEnableHWAPM)
 
 		gpufreq_pr_debug("@%s: enable MTCMOS done\n", __func__);
 	}
+	/* Bounded startup diagnostics; do not alter clocks or power policy. */
+	if (s17_power_reports++ < 4)
+		pr_info("[S17/GPU] MTCMOS enabled: rate=%lu mux=%d async=%d mfg=%d core0=%d hw_apm=%d\n",
+			clk_get_rate(g_clk->clk_mux),
+			clk_is_enabled(g_clk->clk_mux),
+			clk_is_enabled(g_clk->mtcmos_mfg_async),
+			clk_is_enabled(g_clk->mtcmos_mfg),
+			clk_is_enabled(g_clk->mtcmos_mfg_core0), bEnableHWAPM);
+
 }
 EXPORT_SYMBOL(mt_gpufreq_enable_MTCMOS);
 
