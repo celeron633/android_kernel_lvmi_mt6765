@@ -374,13 +374,18 @@ static int dvfs_to_spm2_command(u32 cmd, struct cdvfs_data *cdvfs_d)
 
 	case IPI_SET_CLUSTER_ON_OFF:
 		cdvfs_d->cmd = cmd;
+		tag_pr_info("[S17/IPI] cluster command=%u id=%u state=%u\n",
+			cmd, cdvfs_d->u.set_fv.arg[0], cdvfs_d->u.set_fv.arg[1]);
 
 		cpufreq_ver("I'd like to set cluster%d ON/OFF state to %d)\n",
 			cdvfs_d->u.set_fv.arg[0], cdvfs_d->u.set_fv.arg[1]);
 
 		aee_record_cpu_dvfs_cb(6);
+		tag_pr_info("[S17/IPI] cluster command enter send-sync\n");
 		ret = sspm_ipi_send_sync_new(IPI_ID_CPU_DVFS, IPI_OPT_POLLING,
 		cdvfs_d, len, &ack_data, 1);
+		tag_pr_info("[S17/IPI] cluster command send-sync returned=%u ack=%d\n",
+			ret, ack_data);
 		aee_record_cpu_dvfs_cb(7);
 		if (ret != 0) {
 			tag_pr_notice
@@ -567,12 +572,14 @@ int cpuhvfs_set_init_sta(void)
 int cpuhvfs_set_cluster_on_off(int cluster_id, int state)
 {
 	struct cdvfs_data cdvfs_d;
+	tag_pr_info("[S17/IPI] cluster-on entry id=%d state=%d\n", cluster_id, state);
 
 	/* Cluster, ON:1/OFF:0 */
 	cdvfs_d.u.set_fv.arg[0] = cluster_id;
 	cdvfs_d.u.set_fv.arg[1] = state;
 
 	aee_record_cpu_dvfs_cb(5);
+	tag_pr_info("[S17/IPI] cluster-on AEE callback done\n");
 	dvfs_to_spm2_command(IPI_SET_CLUSTER_ON_OFF, &cdvfs_d);
 
 	return 0;

@@ -74,6 +74,16 @@ int sspm_mbox_write(unsigned int mbox, unsigned int slot, void *data,
 }
 EXPORT_SYMBOL_GPL(sspm_mbox_write);
 
+bool s17_mbox_observe;
+static unsigned int s17_mbox_step;
+static unsigned int s17_mbox_last_irq;
+void sspm_mbox_s17_snapshot(void)
+{
+	pr_info("[S17/IPI] observer mailbox_step=%u last_irq=%#x lock0=%d\n",
+		READ_ONCE(s17_mbox_step), READ_ONCE(s17_mbox_last_irq),
+		spin_is_locked(&lock_mbox[0]));
+}
+
 int sspm_mbox_polling(unsigned int mbox, unsigned int irq, unsigned int slot,
 	unsigned int *retdata, unsigned int retlen, unsigned int retries)
 {
@@ -81,6 +91,7 @@ int sspm_mbox_polling(unsigned int mbox, unsigned int irq, unsigned int slot,
 	void __iomem *out_irq;
 	unsigned int irqs = 0;
 	unsigned long flags = 0;
+	bool observe = mbox == 0 && irq == 1 && READ_ONCE(s17_mbox_observe);
 
 	desc = &sspmmbox[mbox];
 
@@ -88,11 +99,21 @@ int sspm_mbox_polling(unsigned int mbox, unsigned int irq, unsigned int slot,
 
 	out_irq = desc->in_out + MBOX_OUT_IRQ_OFS;
 
+	if (observe)
+		WRITE_ONCE(s17_mbox_step, 1);
 	spin_lock_irqsave(&lock_mbox[mbox], flags);
+	if (observe)
+		WRITE_ONCE(s17_mbox_step, 2);
 	irqs = readl(out_irq);
+	if (observe) {
+		WRITE_ONCE(s17_mbox_last_irq, irqs);
+		WRITE_ONCE(s17_mbox_step, 3);
+	}
 
 	if (irqs & irq) {
 		writel(irq, out_irq);
+		if (observe)
+			WRITE_ONCE(s17_mbox_step, 4);
 		spin_unlock_irqrestore(&lock_mbox[mbox], flags);
 
 		if (retdata)
@@ -103,6 +124,8 @@ int sspm_mbox_polling(unsigned int mbox, unsigned int irq, unsigned int slot,
 	}
 
 	spin_unlock_irqrestore(&lock_mbox[mbox], flags);
+	if (observe)
+		WRITE_ONCE(s17_mbox_step, 5);
 	return -1;
 }
 

@@ -636,8 +636,11 @@ unsigned int _mt_cpufreq_get_cpu_level(void)
 		UP_VSRAM_ST, DOWN_VSRAM_ST);
 	/* free pdev */
 	if (pdev != NULL) {
+		tag_pr_info("[S17/DVFS] efuse temporary device destroy begin\n");
 		of_platform_device_destroy(&pdev->dev, NULL);
+		tag_pr_info("[S17/DVFS] efuse temporary device destroy done\n");
 		of_dev_put(pdev);
+		tag_pr_info("[S17/DVFS] efuse temporary device put done\n");
 	}
 
 	return lv;
