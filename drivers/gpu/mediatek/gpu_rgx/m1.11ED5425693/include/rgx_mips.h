@@ -197,11 +197,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /* Bootloader configuration offset within the bootloader/NMI data page */
 #define RGXMIPSFW_BOOTLDR_CONF_OFFSET                         (0x0)
+#if defined(CONFIG_MTK_RGX_MIPS_BOOT_DATA_EXTENDED)
+/* Stock S17 firmware uses the newer stack-first RGXMIPSFW_BOOT_DATA.
+ * Address offsets are in 64-bit words; size/count offsets are in 32-bit words.
+ */
+#define RGXMIPSFW_STACKPOINTER_PHYADDR_OFFSET                 (0x0)
+#define RGXMIPSFW_ROGUE_REGS_BASE_PHYADDR_OFFSET               (0x1)
+#define RGXMIPSFW_PAGE_TABLE_BASE_PHYADDR_OFFSET               (0x2)
+#define RGXMIPSFW_PT_LOG2_PAGE_SIZE_DWORD_OFFSET               (0xc)
+#define RGXMIPSFW_PT_NUM_PAGES_DWORD_OFFSET                    (0xd)
+#define RGXMIPSFW_RESERVED_FUTURE_OFFSET                       (0x7)
+#else
 /* Offsets of bootloader configuration parameters in 64-bit words */
 #define RGXMIPSFW_ROGUE_REGS_BASE_PHYADDR_OFFSET              (0x0)
 #define RGXMIPSFW_PAGE_TABLE_BASE_PHYADDR_OFFSET              (0x1)
 #define RGXMIPSFW_STACKPOINTER_PHYADDR_OFFSET                 (0x2)
 #define RGXMIPSFW_RESERVED_FUTURE_OFFSET                      (0x3)
+
+#endif
 
 /*
  * NMI shared data

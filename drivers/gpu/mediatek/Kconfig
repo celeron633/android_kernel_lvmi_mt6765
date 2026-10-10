@@ -16,6 +16,15 @@ config MTK_GPU_VERSION
 	  2. GPU architecture name
 	  3. driver version
 
+config MTK_RGX_MIPS_BOOT_DATA_EXTENDED
+	bool "Extended MIPS firmware boot data for S17Promini"
+	depends on MTK_GPU_SUPPORT && MACH_MT6765
+	default n
+	help
+	  Use the stack-first boot descriptor with four page-table addresses
+	  and explicit page-table size/count fields expected by S17Promini's
+	  stock rgx.fw. Enable only for the matching firmware on the 1.11 DDK.
+
 config MTK_GPU_COMMON_DVFS_SUPPORT
 	bool "Support GPU VSync-Based DVFS Policy"
 	default n

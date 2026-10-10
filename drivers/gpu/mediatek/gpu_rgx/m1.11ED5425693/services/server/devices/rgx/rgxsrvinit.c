@@ -727,6 +727,11 @@ static PVRSRV_ERROR RGXAcquireMipsBootldrData(PVRSRV_DEVICE_NODE *psDeviceNode,
 
 	/* MIPS Page Table physical address */
 	MMU_AcquireBaseAddr(psDevInfo->psKernelMMUCtx, &puFWParams->sMips.sFWPageTableAddr);
+#if defined(CONFIG_MTK_RGX_MIPS_BOOT_DATA_EXTENDED)
+	/* The firmware page table is a single contiguous allocation. */
+	puFWParams->sMips.ui32FWPageTableLog2PageSize =
+		psDeviceNode->psFirmwareMMUDevAttrs->ui32BaseAlign;
+#endif
 
 	/* MIPS Stack Pointer Physical Address */
 	eError = RGXGetPhyAddr(psDevInfo->psRGXFWDataMemDesc->psImport->hPMR,
