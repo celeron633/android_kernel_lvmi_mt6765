@@ -1366,9 +1366,14 @@ config TOUCHSCREEN_MTK_TOUCH
 config TOUCHSCREEN_MTK_AXS
 	bool "S17Promini AXS15260 touch bringup"
 	depends on I2C && MACH_MT6765
+	depends on MTK_LCM && CUSTOM_KERNEL_LCM = "axs15260_dsi_6580_hd"
+	select CRC32
+	select FW_LOADER
 	help
 	  Basic I2C report support for the S17Promini AXS15260. Uses the
 	  controller's existing firmware and coordinates reset with the LCM.
-	  Firmware upgrade and gesture wake support are not implemented yet.
+	  Includes manual PRAM tests, complete flash readout and guarded
+	  repair of missing FF bytes. Firmware writes require an explicit
+	  request; automatic upgrades and gesture wake are not implemented.
 
 endif

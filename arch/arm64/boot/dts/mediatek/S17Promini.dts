@@ -18,6 +18,33 @@
 	touch-reset-gpios = <&{/pinctrl@1000b000} 174 0>;
 };
 
+/* A private group survives LK/libufdt replacing stock overlay pin groups. */
+&{/pinctrl@1000b000} {
+	s17_axs_eint: s17-axs-eint {
+		pins_cmd_dat {
+			bias-disable;
+			slew-rate = <0>;
+			pinmux = <0>;
+		};
+	};
+	s17_axs_debug_pull_up: s17-axs-debug-pull-up {
+		pins_cmd_dat {
+			pinmux = <0>;
+			input-enable;
+			input-schmitt-enable;
+			bias-pull-up;
+		};
+	};
+	s17_axs_debug_no_pull: s17-axs-debug-no-pull {
+		pins_cmd_dat {
+			pinmux = <0>;
+			input-enable;
+			input-schmitt-enable;
+			bias-disable;
+		};
+	};
+};
+
 /* Stock probe forcibly replaces the BSP address 0x38 with 0x3b. */
 &{/i2c0@11007000} {
 	/delete-node/ touch@38;
@@ -26,8 +53,10 @@
 		reg = <0x3b>;
 		interrupt-parent = <&{/pinctrl@1000b000}>;
 		interrupts = <0 2>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&{/pinctrl@1000b000/eint@0}>;
+		pinctrl-names = "default", "debug-pull-up", "debug-no-pull";
+		pinctrl-0 = <&s17_axs_eint>;
+		pinctrl-1 = <&s17_axs_debug_pull_up>;
+		pinctrl-2 = <&s17_axs_debug_no_pull>;
 		vtouch-supply = <&{/pwrap@1000d000/main_pmic/mt6357regulator/ldo_vldo28}>;
 		/* Match stock inclusive input axis maxima 384 and 854. */
 		touchscreen-size-x = <385>;
