@@ -771,6 +771,13 @@ typedef struct RGXFWIF_FWCOMMONCONTEXT_
 	IMG_INT32				i32StatsNumStores;					/*!< Number of stores on this context since last update */
 	IMG_INT32				i32StatsNumOutOfMemory;				/*!< Number of OOMs on this context since last update */
 	IMG_INT32				i32StatsNumPartialRenders;			/*!< Number of PRs on this context since last update */
+#if defined(CONFIG_MTK_RGX_S17_FW_CONTEXT)
+	/* Stock kernel writes eDM at 0x6c; S17 firmware reads that offset.
+	 * Consume the existing alignment hole without moving the fields after eDM.
+	 * The vendor word's meaning is not established; keep it zero-initialised.
+	 */
+	IMG_UINT32				ui32S17VendorReserved;
+#endif
 	RGXFWIF_DM				eDM;								/*!< Data Master type */
 	IMG_UINT64				RGXFW_ALIGN  ui64WaitSignalAddress;	/*!< Device Virtual Address of the signal the context is waiting on */
 	RGXFWIF_DLLIST_NODE		RGXFW_ALIGN  sWaitSignalNode;		/*!< List entry for the wait-signal list */

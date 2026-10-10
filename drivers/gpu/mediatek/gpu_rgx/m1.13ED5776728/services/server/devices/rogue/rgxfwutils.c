@@ -912,6 +912,12 @@ PVRSRV_ERROR FWCommonContextAllocate(CONNECTION_DATA *psConnection,
 	}
 
 	psFWCommonContext = (RGXFWIF_FWCOMMONCONTEXT *) (pui8Ptr + ui32FWCommonContextOffset);
+#if defined(CONFIG_MTK_RGX_S17_FW_CONTEXT)
+	BUILD_BUG_ON(offsetof(RGXFWIF_FWCOMMONCONTEXT, eDM) != 0x6c);
+	BUILD_BUG_ON(offsetof(RGXFWIF_FWCOMMONCONTEXT, ui64WaitSignalAddress) != 0x70);
+	BUILD_BUG_ON(sizeof(RGXFWIF_FWCOMMONCONTEXT) != 0xa0);
+	psFWCommonContext->ui32S17VendorReserved = 0;
+#endif
 	psFWCommonContext->eDM = eDM;
 
 	/* Set the firmware CCB device addresses in the firmware common context */

@@ -16,6 +16,15 @@ config MTK_GPU_VERSION
 	  2. GPU architecture name
 	  3. driver version
 
+config MTK_RGX_S17_FW_CONTEXT
+	bool "S17 vendor Rogue firmware common-context layout"
+	depends on MTK_GPU_SUPPORT && MACH_MT6765
+	default n
+	help
+	  Match the S17 vendor firmware's common-context data-master field at
+	  offset 0x6c. The upstream 1.13 layout places it at 0x68 instead.
+	  Enable only with the S17 vendor firmware and m1.13ED5776728 driver.
+
 config MTK_RGX_MIPS_BOOT_DATA_EXTENDED
 	bool "Extended MIPS firmware boot data for S17Promini"
 	depends on MTK_GPU_SUPPORT && MACH_MT6765
