@@ -302,6 +302,16 @@ static int mtk_usb_extcon_tcpc_init(struct mtk_extcon_info *extcon)
 }
 #endif
 
+static void mtk_usb_extcon_remove_connection(void *data)
+{
+	device_connection_remove(data);
+}
+
+static void mtk_usb_extcon_put_role_switch(void *data)
+{
+	usb_role_switch_put(data);
+}
+
 static int mtk_usb_extcon_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -337,21 +347,36 @@ static int mtk_usb_extcon_probe(struct platform_device *pdev)
 	}
 
 	conn_pdev = of_find_device_by_node(conn_np);
+	of_node_put(conn_np);
 	if (!conn_pdev) {
 		dev_info(dev, "failed to get dev-conn pdev\n");
 		return -EINVAL;
 	}
 
-	extcon->dev_conn.endpoint[0] = kasprintf(GFP_KERNEL,
+	extcon->dev_conn.endpoint[0] = devm_kasprintf(dev, GFP_KERNEL,
 				"%s-role-switch", dev_name(&conn_pdev->dev));
+	put_device(&conn_pdev->dev);
+	if (!extcon->dev_conn.endpoint[0])
+		return -ENOMEM;
 	extcon->dev_conn.endpoint[1] = dev_name(extcon->dev);
 	extcon->dev_conn.id = "usb-role-switch";
 	device_connection_add(&extcon->dev_conn);
+	/* A deferred/failed probe releases extcon; unlink before devres frees it. */
+	ret = devm_add_action_or_reset(dev, mtk_usb_extcon_remove_connection,
+				     &extcon->dev_conn);
+	if (ret)
+		return ret;
 
 	extcon->role_sw = usb_role_switch_get(extcon->dev);
 	if (IS_ERR(extcon->role_sw)) {
 		dev_err(dev, "failed to get usb role\n");
 		return PTR_ERR(extcon->role_sw);
+	}
+	if (extcon->role_sw) {
+		ret = devm_add_action_or_reset(dev, mtk_usb_extcon_put_role_switch,
+					     extcon->role_sw);
+		if (ret)
+			return ret;
 	}
 
 	/* vbus */
@@ -395,16 +420,6 @@ static int mtk_usb_extcon_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int mtk_usb_extcon_remove(struct platform_device *pdev)
-{
-	struct mtk_extcon_info *extcon = platform_get_drvdata(pdev);
-
-	if (extcon->dev_conn.id)
-		device_connection_remove(&extcon->dev_conn);
-
-	return 0;
-}
-
 static const struct of_device_id mtk_usb_extcon_of_match[] = {
 	{ .compatible = "mediatek,extcon-usb", },
 	{ },
@@ -413,7 +428,6 @@ MODULE_DEVICE_TABLE(of, mtk_usb_extcon_dt_match);
 
 static struct platform_driver mtk_usb_extcon_driver = {
 	.probe		= mtk_usb_extcon_probe,
-	.remove		= mtk_usb_extcon_remove,
 	.driver		= {
 		.name	= "mtk-extcon-usb",
 		.of_match_table = mtk_usb_extcon_of_match,
