@@ -41,6 +41,11 @@ static struct i2c_dma_info g_dma_regs[I2C_MAX_CHANNEL];
 static struct mt_i2c *g_mt_i2c[I2C_MAX_CHANNEL];
 static struct mtk_i2c_compatible i2c_common_compat;
 
+/* Runtime opt-in tracing for the S17 touch bus only; transfer policy unchanged. */
+static bool s17_touch_debug;
+module_param(s17_touch_debug, bool, 0600);
+MODULE_PARM_DESC(s17_touch_debug, "Trace I2C0 address 0x3b touch transactions");
+
 
 
 static inline void _i2c_writew(u16 value, struct mt_i2c *i2c, u16 offset)
@@ -1454,6 +1459,17 @@ static int __mt_i2c_transfer(struct mt_i2c *i2c,
 			return -EBUSY;
 		}
 		ret = mt_i2c_do_transfer(i2c);
+		if (READ_ONCE(s17_touch_debug) && i2c->id == 0 &&
+		    i2c->addr == 0x3b) {
+			unsigned int length = i2c->op == I2C_MASTER_WRRD ?
+				i2c->msg_aux_len : i2c->msg_len;
+
+			dev_info_ratelimited(i2c->dev,
+				"[S17/I2C] op=%d len=%u aux=%u ret=%d irq=0x%x dma=%pad buffer=%*ph\n",
+				i2c->op, i2c->msg_len, i2c->msg_aux_len, ret,
+				i2c->irq_stat, &i2c->dma_buf.paddr,
+				min_t(unsigned int, length, 32), i2c->dma_buf.vaddr);
+		}
 		/* Use HW semaphore to protect device access between
 		 * AP and SPM, or SCP
 		 */
