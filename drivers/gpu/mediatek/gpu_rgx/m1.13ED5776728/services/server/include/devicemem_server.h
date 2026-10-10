@@ -349,6 +349,17 @@ DevmemIntUnmapPages(DEVMEMINT_RESERVATION *psReservation,
  * If you call DevmemIntReserveRange() (and the call succeeds) then you are
  * promising that you shall later call DevmemIntUnreserveRange()
  */
+/* Extended reservation-owned mapping ABI. */
+PVRSRV_ERROR DevmemIntReserveRange2(DEVMEMINT_HEAP *, IMG_DEV_VIRTADDR,
+	IMG_DEVMEM_SIZE_T, PVRSRV_MEMALLOCFLAGS_T, DEVMEMINT_RESERVATION **);
+PVRSRV_ERROR DevmemIntUnreserveRange2(DEVMEMINT_RESERVATION *);
+PVRSRV_ERROR DevmemIntMapPMR2(DEVMEMINT_HEAP *, DEVMEMINT_RESERVATION *, PMR *);
+PVRSRV_ERROR DevmemIntUnmapPMR2(DEVMEMINT_RESERVATION *);
+IMG_BOOL DevmemIntReservation2Acquire(DEVMEMINT_RESERVATION *);
+void DevmemIntReservation2Release(DEVMEMINT_RESERVATION *);
+PVRSRV_ERROR DevmemIntReservation2AcquireMapping(DEVMEMINT_RESERVATION *,
+	PMR **, IMG_DEV_VIRTADDR *);
+
 PVRSRV_ERROR
 DevmemIntReserveRange(DEVMEMINT_HEAP *psDevmemHeap,
                       IMG_DEV_VIRTADDR sAllocationDevVAddr,

@@ -2138,6 +2138,10 @@ PVRSRV_ERROR RGXDestroyFreeList(RGX_FREELIST *psFreeList)
 	PVR_ASSERT(dllist_is_empty(&psFreeList->sMemoryBlockInitHead));
 	PVR_ASSERT(psFreeList->ui32CurrentFLPages == 0);
 
+	/* Release the extended mapping only after FW cleanup is complete. */
+	if (psFreeList->psFreeListReservation2)
+		DevmemIntReservation2Release(psFreeList->psFreeListReservation2);
+
 	/* free Freelist */
 	OSFreeMem(psFreeList);
 
@@ -2306,6 +2310,9 @@ PVRSRV_ERROR RGXDestroyZSBufferKM(RGX_ZSBUFFER_DATA *psZSBuffer)
 		PVR_ASSERT(psZSBuffer->ui32RefCount == 0);
 
 		PVR_DPF((PVR_DBG_MESSAGE, "ZS-Buffer [%p] destroyed", psZSBuffer));
+
+		if (psZSBuffer->bReservation2Ref)
+			DevmemIntReservation2Release(psZSBuffer->psReservation);
 
 		/* Free ZS-Buffer host data structure */
 		OSFreeMem(psZSBuffer);
@@ -5428,3 +5435,46 @@ PVRSRV_ERROR RGXRenderContextStalledKM(RGX_SERVER_RENDER_CONTEXT *psRenderContex
 /******************************************************************************
  End of file (rgxta3d.c)
 ******************************************************************************/
+
+
+PVRSRV_ERROR RGXCreateFreeList2(CONNECTION_DATA *psConnection,
+	PVRSRV_DEVICE_NODE *psDeviceNode, IMG_HANDLE hMemCtxPrivData,
+	IMG_UINT32 ui32MaxFLPages, IMG_UINT32 ui32InitFLPages,
+	IMG_UINT32 ui32GrowFLPages, IMG_UINT32 ui32GrowParamThreshold,
+	RGX_FREELIST *psGlobalFreeList, IMG_BOOL bCheckFreelist,
+	DEVMEMINT_RESERVATION *psReservation, RGX_FREELIST **ppsFreeList)
+{
+	PMR *psPMR;
+	IMG_DEV_VIRTADDR sAddress;
+	PVRSRV_ERROR eError;
+
+	eError = DevmemIntReservation2AcquireMapping(psReservation, &psPMR, &sAddress);
+	if (eError != PVRSRV_OK)
+		return eError;
+	eError = RGXCreateFreeList(psConnection, psDeviceNode, hMemCtxPrivData,
+		ui32MaxFLPages, ui32InitFLPages, ui32GrowFLPages,
+		ui32GrowParamThreshold, psGlobalFreeList, bCheckFreelist,
+		sAddress, psPMR, 0, ppsFreeList);
+	if (eError == PVRSRV_OK)
+		(*ppsFreeList)->psFreeListReservation2 = psReservation;
+	else
+		DevmemIntReservation2Release(psReservation);
+	return eError;
+}
+
+PVRSRV_ERROR RGXCreateZSBuffer2KM(CONNECTION_DATA *psConnection,
+	PVRSRV_DEVICE_NODE *psDeviceNode, DEVMEMINT_RESERVATION *psReservation,
+	PMR *psPMR, PVRSRV_MEMALLOCFLAGS_T uiMapFlags, RGX_ZSBUFFER_DATA **ppsZSBuffer)
+{
+	PVRSRV_ERROR eError;
+
+	if (!DevmemIntReservation2Acquire(psReservation))
+		return PVRSRV_ERROR_INVALID_PARAMS;
+	eError = RGXCreateZSBufferKM(psConnection, psDeviceNode, psReservation,
+		psPMR, uiMapFlags, ppsZSBuffer);
+	if (eError == PVRSRV_OK)
+		(*ppsZSBuffer)->bReservation2Ref = IMG_TRUE;
+	else
+		DevmemIntReservation2Release(psReservation);
+	return eError;
+}

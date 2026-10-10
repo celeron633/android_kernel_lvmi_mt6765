@@ -141,6 +141,7 @@ typedef struct _RGX_KM_HW_RT_DATASET_
 } RGX_KM_HW_RT_DATASET;
 
 struct _RGX_FREELIST_ {
+	DEVMEMINT_RESERVATION *psFreeListReservation2;
 	PVRSRV_RGXDEV_INFO		*psDevInfo;
 
 	/* Free list PMR */
@@ -198,6 +199,7 @@ typedef struct {
 	RGXFWIF_DEV_VIRTADDR	sZSBufferFWDevVAddr;
 
 	DEVMEMINT_RESERVATION	*psReservation;
+	IMG_BOOL bReservation2Ref;
 	PMR						*psPMR;
 	DEVMEMINT_MAPPING		*psMapping;
 	PVRSRV_MEMALLOCFLAGS_T	uiMapFlags;
@@ -505,4 +507,11 @@ IMG_UINT32 CheckForStalledClientRenderCtxt(PVRSRV_RGXDEV_INFO *psDevInfo);
 
 PVRSRV_ERROR RGXRenderContextStalledKM(RGX_SERVER_RENDER_CONTEXT *psRenderContext);
 
+
+/* Extended clients supply a reservation in place of PMR/address metadata. */
+PVRSRV_ERROR RGXCreateFreeList2(CONNECTION_DATA *, PVRSRV_DEVICE_NODE *, IMG_HANDLE,
+	IMG_UINT32, IMG_UINT32, IMG_UINT32, IMG_UINT32, RGX_FREELIST *, IMG_BOOL,
+	DEVMEMINT_RESERVATION *, RGX_FREELIST **);
+PVRSRV_ERROR RGXCreateZSBuffer2KM(CONNECTION_DATA *, PVRSRV_DEVICE_NODE *,
+	DEVMEMINT_RESERVATION *, PMR *, PVRSRV_MEMALLOCFLAGS_T, RGX_ZSBUFFER_DATA **);
 #endif /* RGXTA3D_H */
