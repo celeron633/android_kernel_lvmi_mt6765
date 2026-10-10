@@ -447,23 +447,12 @@ static int dvfs_to_spm2_command(u32 cmd, struct cdvfs_data *cdvfs_d)
 	return ret;
 }
 
-#define DBG_REPO_S		CSRAM_BASE
-#define DBG_REPO_E		(DBG_REPO_S + CSRAM_SIZE)
-#define DBG_REPO_TBL_S		(DBG_REPO_S + OFFS_TBL_S)
-#define DBG_REPO_TBL_E		(DBG_REPO_S + OFFS_TBL_E)
-#define DBG_REPO_DATA_S		(DBG_REPO_S + OFFS_DATA_S)
-#define DBG_REPO_DATA_E		(DBG_REPO_S + OFFS_LOG_S)
-#define DBG_REPO_LOG_S		(DBG_REPO_S + OFFS_LOG_S)
-#define DBG_REPO_LOG_E		(DBG_REPO_S + OFFS_LOG_E)
-#define DBG_REPO_SIZE		(DBG_REPO_E - DBG_REPO_S)
+#define DBG_REPO_SIZE		CSRAM_SIZE
 #define DBG_REPO_NUM		(DBG_REPO_SIZE / sizeof(u32))
 #define REPO_I_DATA_S		(OFFS_DATA_S / sizeof(u32))
 #define REPO_I_LOG_S		(OFFS_LOG_S / sizeof(u32))
 #define REPO_GUARD0		0x55aa55aa
 #define REPO_GUARD1		0xaa55aa55
-
-#define DBG_REPO_CCI_TBL_S		(DBG_REPO_S + OFFS_CCI_TBL_S)
-#define DBG_REPO_CCI_TBL_E		(DBG_REPO_S + OFFS_CCI_TBL_E)
 
 /* CCI Volt Clamp */
 #define OFFS_CCI_VOLT_CLAMP (0x024c)   /* 147 */
@@ -505,13 +494,24 @@ static int dvfs_to_spm2_command(u32 cmd, struct cdvfs_data *cdvfs_d)
 static u32 g_dbg_repo_bak[DBG_REPO_NUM];
 static int _mt_dvfsp_pdrv_probe(struct platform_device *pdev)
 {
+	struct resource res;
+	int ret;
+
 	/* cspm_base = of_iomap(pdev->dev.of_node, 0); */
+
+	ret = of_address_to_resource(pdev->dev.of_node, 1, &res);
+	if (ret)
+		return ret;
+	if (resource_size(&res) < DBG_REPO_SIZE)
+		return -EINVAL;
 
 	csram_base = of_iomap(pdev->dev.of_node, 1);
 
 	if (!csram_base)
 		return -ENOMEM;
 
+	tag_pr_info("[S17/DVFS] SRAM resource=%pa size=%#x PV offset=%#x\n",
+		&res.start, DBG_REPO_SIZE, OFFS_TBL_S);
 	dvfsp_probe_done = 1;
 
 	return 0;
@@ -868,7 +868,8 @@ void __init cpuhvfs_pvt_tbl_create(void)
 #endif
 
 	lv = _mt_cpufreq_get_cpu_level();
-	recordRef = ioremap_nocache(DBG_REPO_TBL_S, PVT_TBL_SIZE);
+	/* Tables and control words must use the same DT-selected SRAM bank. */
+	recordRef = (u32 *)(csram_base + OFFS_TBL_S);
 	tag_pr_info("DVFS - @(Record)%s----->(%p)\n", __func__, recordRef);
 	memset_io((u8 *)recordRef, 0x00, PVT_TBL_SIZE);
 
@@ -965,7 +966,7 @@ void __init cpuhvfs_pvt_tbl_create(void)
 	mb(); /* SRAM writing */
 
 #ifdef CCI_MAP_TBL_SUPPORT
-	record_CCI_Ref = ioremap_nocache(DBG_REPO_CCI_TBL_S, PVT_CCI_TBL_SIZE);
+	record_CCI_Ref = (u8 *)(csram_base + OFFS_CCI_TBL_S);
 	tag_pr_info("DVFS - @(Record)%s----->(%p)\n", __func__, record_CCI_Ref);
 	memset_io((u8 *)record_CCI_Ref, 0x00, PVT_CCI_TBL_SIZE);
 
@@ -1115,11 +1116,10 @@ static void __init init_cpuhvfs_debug_repo(void)
 	dbg_repo[2] = REPO_GUARD0;
 	dbg_repo[3] = REPO_GUARD1;
 
-	/* Clean 0x00100000(CSRAM_BASE) + 0x02a0 */
-	/*count END_SRAM - (DBG_REPO_S + OFFS_DATA_S)*/
-	memset_io((void __iomem *)dbg_repo + DBG_REPO_DATA_S - DBG_REPO_S,
+	/* Clear control/log data within the DT-selected SRAM resource. */
+	memset_io((void __iomem *)dbg_repo + OFFS_DATA_S,
 		  0,
-		  DBG_REPO_E - DBG_REPO_DATA_S);
+		  DBG_REPO_SIZE - OFFS_DATA_S);
 
 	dbg_repo[REPO_I_DATA_S] = REPO_GUARD0;
 
