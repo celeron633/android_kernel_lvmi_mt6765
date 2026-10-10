@@ -188,7 +188,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /* Permanent mappings setup */
 #define RGXMIPSFW_PT_VIRTUAL_BASE                (0xCF000000)
+#if defined(CONFIG_MTK_RGX_MIPS_BOOT_DATA_EXTENDED)
+/* Match the register window mapped by the stock firmware bootstrap. */
+#define RGXMIPSFW_REGISTERS_VIRTUAL_BASE         (0xCF800000)
+#else
 #define RGXMIPSFW_REGISTERS_VIRTUAL_BASE         (0xCF400000)
+#endif
 #define RGXMIPSFW_STACK_VIRTUAL_BASE             (0xCF600000)
 
 

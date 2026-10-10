@@ -23,7 +23,8 @@ config MTK_RGX_MIPS_BOOT_DATA_EXTENDED
 	help
 	  Use the stack-first boot descriptor with four page-table addresses
 	  and explicit page-table size/count fields expected by S17Promini's
-	  stock rgx.fw. Enable only for the matching firmware on the 1.11 DDK.
+	  stock rgx.fw, including its register-window virtual base.
+	  Enable only for the matching firmware on the 1.11 DDK.
 
 config MTK_GPU_COMMON_DVFS_SUPPORT
 	bool "Support GPU VSync-Based DVFS Policy"
