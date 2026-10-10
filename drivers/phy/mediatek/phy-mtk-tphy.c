@@ -343,10 +343,8 @@ struct mtk_tphy {
 	int src_coef; /* coefficient for slew rate calibrate */
 };
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
 static void u2_phy_props_set(struct mtk_tphy *tphy,
 			     struct mtk_phy_instance *instance);
-#endif
 
 static void u2_phy_instance_set_mode_ext(struct mtk_tphy *tphy,
 				     struct mtk_phy_instance *instance,

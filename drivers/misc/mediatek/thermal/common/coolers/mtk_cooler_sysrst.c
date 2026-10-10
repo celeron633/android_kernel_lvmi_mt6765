@@ -21,7 +21,6 @@
 #include <linux/slab.h>
 #include <linux/seq_file.h>
 #include <tscpu_settings.h>
-#include <soc/oplus/system/oppo_project.h>
 
 /*=============================================================
  *Local variable definition
@@ -116,10 +115,7 @@ struct thermal_cooling_device *cdev, unsigned long state)
 		/* To trigger data abort to reset the system
 		 * for thermal protection.
 		 */
-		if (get_eng_version() != HIGH_TEMP_AGING)
-			BUG();
-		else
-			tscpu_printk("should reset bypass \n");
+		BUG();
 	}
 	return 0;
 }
@@ -155,10 +151,7 @@ struct thermal_cooling_device *cdev, unsigned long state)
 		/* To trigger data abort to reset the system
 		 * for thermal protection.
 		 */
-		if (get_eng_version() != HIGH_TEMP_AGING)
-			BUG();
-		else
-			tscpu_printk("should reset bypass \n");
+		BUG();
 	}
 	return 0;
 }
@@ -194,10 +187,7 @@ struct thermal_cooling_device *cdev, unsigned long state)
 		/* To trigger data abort to reset the system
 		 * for thermal protection.
 		 */
-		if (get_eng_version() != HIGH_TEMP_AGING)
-			BUG();
-		else
-			tscpu_printk("should reset bypass \n");
+		BUG();
 	}
 	return 0;
 }

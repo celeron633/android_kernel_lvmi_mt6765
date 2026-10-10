@@ -27,7 +27,6 @@
 #include <linux/uidgid.h>
 #include <linux/slab.h>
 #include <mtk_ts_setting.h>
-#include <soc/oplus/system/oppo_project.h>
 
 #if Feature_Thro_update
 /* For using net dev + */
@@ -429,10 +428,7 @@ struct thermal_cooling_device *cdev, unsigned long state)
 		/* To trigger data abort to reset the system
 		 * for thermal protection.
 		 */
-		if (get_eng_version() != HIGH_TEMP_AGING)
-			BUG();
-		else
-			pr_info("%s should reset but bypass\n", __func__);
+		BUG();
 	}
 	return 0;
 }
