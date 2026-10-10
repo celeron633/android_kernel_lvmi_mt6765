@@ -117,6 +117,11 @@ struct _DEVMEMINT_RESERVATION_
 	struct _DEVMEMINT_HEAP_ *psDevmemHeap;
 	IMG_DEV_VIRTADDR sBase;
 	IMG_DEVMEM_SIZE_T uiLength;
+	/* Extended clients keep mapping flags and ownership in the reservation. */
+	POS_LOCK hMapping2Lock;
+	PVRSRV_MEMALLOCFLAGS_T uiMapping2Flags;
+	DEVMEMINT_MAPPING *psMapping2;
+	IMG_UINT32 uiMapping2Refs;
 };
 
 struct _DEVMEMINT_MAPPING_
@@ -869,7 +874,7 @@ DevmemIntReserveRange(DEVMEMINT_HEAP *psDevmemHeap,
 	DEVMEMINT_RESERVATION *psReservation;
 
 	/* allocate memory to record the reservation info */
-	psReservation = OSAllocMem(sizeof(*psReservation));
+	psReservation = OSAllocZMem(sizeof(*psReservation));
 	PVR_LOG_GOTO_IF_NOMEM(psReservation, eError, e0);
 
 	psReservation->sBase = sAllocationDevVAddr;
@@ -923,6 +928,142 @@ DevmemIntUnreserveRange(DEVMEMINT_RESERVATION *psReservation)
 	OSFreeMem(psReservation);
 
     return PVRSRV_OK;
+}
+
+
+/* New memory ABI, retaining the existing 1.13 MMU and PMR operations. */
+PVRSRV_ERROR DevmemIntReserveRange2(DEVMEMINT_HEAP *psHeap,
+	IMG_DEV_VIRTADDR sAddress, IMG_DEVMEM_SIZE_T uiLength,
+	PVRSRV_MEMALLOCFLAGS_T uiFlags, DEVMEMINT_RESERVATION **ppsReservation)
+{
+	DEVMEMINT_RESERVATION *psReservation;
+	PVRSRV_ERROR eError;
+
+	/* The legacy free path uses a 32-bit length. Reject truncation and
+	 * malformed fixed-address ranges before touching the MMU allocator.
+	 */
+	if (!uiLength || uiLength > 0xffffffffULL ||
+	    sAddress.uiAddr > ~(IMG_UINT64)0 - uiLength ||
+	    psHeap->uiLog2PageSize > 30 ||
+	    ((sAddress.uiAddr | uiLength) &
+	     (((IMG_UINT64)1 << psHeap->uiLog2PageSize) - 1)))
+		return PVRSRV_ERROR_INVALID_PARAMS;
+
+	eError = DevmemIntReserveRange(psHeap, sAddress, uiLength, &psReservation);
+	if (eError != PVRSRV_OK)
+		return eError;
+	eError = OSLockCreate(&psReservation->hMapping2Lock);
+	if (eError != PVRSRV_OK) {
+		DevmemIntUnreserveRange(psReservation);
+		return eError;
+	}
+	psReservation->uiMapping2Flags = uiFlags;
+	psReservation->uiMapping2Refs = 1;
+	*ppsReservation = psReservation;
+	return PVRSRV_OK;
+}
+
+IMG_BOOL DevmemIntReservation2Acquire(DEVMEMINT_RESERVATION *psReservation)
+{
+	IMG_BOOL bAcquired = IMG_FALSE;
+
+	if (!psReservation->hMapping2Lock)
+		return IMG_FALSE;
+	OSLockAcquire(psReservation->hMapping2Lock);
+	if (psReservation->uiMapping2Refs < 0xffffffffU) {
+		psReservation->uiMapping2Refs++;
+		bAcquired = IMG_TRUE;
+	}
+	OSLockRelease(psReservation->hMapping2Lock);
+	return bAcquired;
+}
+
+void DevmemIntReservation2Release(DEVMEMINT_RESERVATION *psReservation)
+{
+	OSLockAcquire(psReservation->hMapping2Lock);
+	PVR_ASSERT(psReservation->uiMapping2Refs > 1);
+	if (psReservation->uiMapping2Refs > 1)
+		psReservation->uiMapping2Refs--;
+	OSLockRelease(psReservation->hMapping2Lock);
+}
+
+/* Borrowed render resources keep the reservation/mapping alive until destroy. */
+PVRSRV_ERROR DevmemIntReservation2AcquireMapping(DEVMEMINT_RESERVATION *psReservation,
+	PMR **ppsPMR, IMG_DEV_VIRTADDR *psAddress)
+{
+	PVRSRV_ERROR eError = PVRSRV_ERROR_INVALID_PARAMS;
+
+	if (!psReservation->hMapping2Lock)
+		return eError;
+	OSLockAcquire(psReservation->hMapping2Lock);
+	if (psReservation->psMapping2 && psReservation->uiMapping2Refs < 0xffffffffU) {
+		psReservation->uiMapping2Refs++;
+		*ppsPMR = psReservation->psMapping2->psPMR;
+		*psAddress = psReservation->sBase;
+		eError = PVRSRV_OK;
+	}
+	OSLockRelease(psReservation->hMapping2Lock);
+	return eError;
+}
+
+PVRSRV_ERROR DevmemIntMapPMR2(DEVMEMINT_HEAP *psHeap,
+	DEVMEMINT_RESERVATION *psReservation, PMR *psPMR)
+{
+	IMG_DEVMEM_SIZE_T uiPMRSize;
+	PVRSRV_ERROR eError = PVRSRV_ERROR_INVALID_PARAMS;
+
+	if (!psReservation->hMapping2Lock || psReservation->psDevmemHeap != psHeap)
+		return eError;
+	PMR_LogicalSize(psPMR, &uiPMRSize);
+	if (psReservation->uiLength > uiPMRSize)
+		return eError;
+	OSLockAcquire(psReservation->hMapping2Lock);
+	if (!psReservation->psMapping2)
+		eError = DevmemIntMapPMR(psHeap, psReservation, psPMR,
+			psReservation->uiMapping2Flags, &psReservation->psMapping2);
+	OSLockRelease(psReservation->hMapping2Lock);
+	return eError;
+}
+
+PVRSRV_ERROR DevmemIntUnmapPMR2(DEVMEMINT_RESERVATION *psReservation)
+{
+	PVRSRV_ERROR eError = PVRSRV_ERROR_INVALID_PARAMS;
+
+	if (!psReservation->hMapping2Lock)
+		return eError;
+	OSLockAcquire(psReservation->hMapping2Lock);
+	if (psReservation->uiMapping2Refs != 1)
+		eError = PVRSRV_ERROR_RETRY;
+	else if (psReservation->psMapping2) {
+		eError = DevmemIntUnmapPMR(psReservation->psMapping2);
+		if (eError == PVRSRV_OK)
+			psReservation->psMapping2 = NULL;
+	}
+	OSLockRelease(psReservation->hMapping2Lock);
+	return eError;
+}
+
+PVRSRV_ERROR DevmemIntUnreserveRange2(DEVMEMINT_RESERVATION *psReservation)
+{
+	PVRSRV_ERROR eError = PVRSRV_OK;
+	POS_LOCK hLock = psReservation->hMapping2Lock;
+
+	if (!hLock)
+		return PVRSRV_ERROR_INVALID_PARAMS;
+	OSLockAcquire(hLock);
+	if (psReservation->uiMapping2Refs != 1)
+		eError = PVRSRV_ERROR_RETRY;
+	else if (psReservation->psMapping2) {
+		eError = DevmemIntUnmapPMR(psReservation->psMapping2);
+		if (eError == PVRSRV_OK)
+			psReservation->psMapping2 = NULL;
+	}
+	OSLockRelease(hLock);
+	if (eError != PVRSRV_OK)
+		return eError;
+	OSLockDestroy(hLock);
+	psReservation->hMapping2Lock = NULL;
+	return DevmemIntUnreserveRange(psReservation);
 }
 
 
