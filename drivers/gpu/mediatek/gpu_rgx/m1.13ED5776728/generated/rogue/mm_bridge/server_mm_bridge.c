@@ -2988,7 +2988,7 @@ PVRSRVBridgeDevmemIntReserveRange2(IMG_UINT32 ui32DispatchTableEntry,
 				      PVRSRV_HANDLE_TYPE_DEVMEMINT_RESERVATION,
 				      PVRSRV_HANDLE_ALLOC_FLAG_MULTI,
 				      (PFN_HANDLE_RELEASE) &
-				      DevmemIntUnreserveRange);
+				      DevmemIntUnreserveRange2);
 	if (unlikely(psDevmemIntReserveRange2OUT->eError != PVRSRV_OK))
 	{
 		UnlockHandle(psConnection->psHandleBase);
