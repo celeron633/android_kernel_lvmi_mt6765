@@ -3451,10 +3451,16 @@ void device_shutdown(void)
 {
 	struct device *dev, *parent;
 
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] wait_for_device_probe begin\n");
 	wait_for_device_probe();
 	device_block_probing();
 
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] cpufreq_suspend begin\n");
 	cpufreq_suspend();
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] cpufreq_suspend done\n");
 
 	spin_lock(&devices_kset->list_lock);
 	/*
@@ -3481,13 +3487,19 @@ void device_shutdown(void)
 		spin_unlock(&devices_kset->list_lock);
 
 		/* hold lock to avoid race with probe/release */
+		if (initcall_debug)
+			dev_info(dev, "[S17/REBOOT] shutdown locks begin\n");
 		if (parent)
 			device_lock(parent);
 		device_lock(dev);
 
 		/* Don't allow any more runtime suspends */
+		if (initcall_debug)
+			dev_info(dev, "[S17/REBOOT] runtime barrier begin\n");
 		pm_runtime_get_noresume(dev);
 		pm_runtime_barrier(dev);
+		if (initcall_debug)
+			dev_info(dev, "[S17/REBOOT] runtime barrier done\n");
 
 		if (dev->class && dev->class->shutdown_pre) {
 			if (initcall_debug)
@@ -3504,6 +3516,8 @@ void device_shutdown(void)
 			dev->driver->shutdown(dev);
 		}
 
+		if (initcall_debug)
+			dev_info(dev, "[S17/REBOOT] shutdown callbacks done\n");
 		device_unlock(dev);
 		if (parent)
 			device_unlock(parent);

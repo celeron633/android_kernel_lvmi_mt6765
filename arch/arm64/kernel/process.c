@@ -150,9 +150,13 @@ void machine_power_off(void)
  */
 void machine_restart(char *cmd)
 {
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] machine_restart entry; smp_send_stop begin\n");
 	/* Disable interrupts first */
 	local_irq_disable();
 	smp_send_stop();
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] smp_send_stop done\n");
 
 	/*
 	 * UpdateCapsule() depends on the system being reset via
@@ -162,6 +166,9 @@ void machine_restart(char *cmd)
 		efi_reboot(reboot_mode, NULL);
 
 	/* Now call the architecture specific reboot code. */
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] reset handler begin arm_pm_restart=%ps\n",
+			arm_pm_restart);
 	if (arm_pm_restart)
 		arm_pm_restart(reboot_mode, cmd);
 	else

@@ -1,6 +1,7 @@
 #include <linux/kdebug.h>
 #include <linux/kprobes.h>
 #include <linux/export.h>
+#include <linux/init.h>
 #include <linux/notifier.h>
 #include <linux/rcupdate.h>
 #include <linux/vmalloc.h>
@@ -77,6 +78,7 @@ static int notifier_call_chain(struct notifier_block **nl,
 {
 	int ret = NOTIFY_DONE;
 	struct notifier_block *nb, *next_nb;
+	bool trace_reboot = initcall_debug && nl == &reboot_notifier_list.head;
 
 	nb = rcu_dereference_raw(*nl);
 
@@ -90,7 +92,13 @@ static int notifier_call_chain(struct notifier_block **nl,
 			continue;
 		}
 #endif
+		if (trace_reboot)
+			pr_info("[S17/REBOOT] notifier %ps begin event=%lu\n",
+				nb->notifier_call, val);
 		ret = nb->notifier_call(nb, val, v);
+		if (trace_reboot)
+			pr_info("[S17/REBOOT] notifier %ps done ret=%#x\n",
+				nb->notifier_call, ret);
 
 		if (nr_calls)
 			(*nr_calls)++;

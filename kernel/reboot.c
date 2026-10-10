@@ -8,6 +8,7 @@
 
 #include <linux/ctype.h>
 #include <linux/export.h>
+#include <linux/init.h>
 #include <linux/kexec.h>
 #include <linux/kmod.h>
 #include <linux/kmsg_dump.h>
@@ -68,10 +69,20 @@ EXPORT_SYMBOL_GPL(emergency_restart);
 
 void kernel_restart_prepare(char *cmd)
 {
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] reboot notifiers begin\n");
 	blocking_notifier_call_chain(&reboot_notifier_list, SYS_RESTART, cmd);
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] reboot notifiers done\n");
 	system_state = SYSTEM_RESTART;
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] usermodehelper_disable begin\n");
 	usermodehelper_disable();
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] device_shutdown begin\n");
 	device_shutdown();
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] device_shutdown done\n");
 }
 
 /**
@@ -241,9 +252,17 @@ void migrate_to_reboot_cpu(void)
  */
 void kernel_restart(char *cmd)
 {
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] kernel_restart entry\n");
 	kernel_restart_prepare(cmd);
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] reboot CPU migration begin\n");
 	migrate_to_reboot_cpu();
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] reboot CPU migration done; syscore begin\n");
 	syscore_shutdown();
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] syscore done\n");
 	if (!cmd)
 		pr_emerg("Restarting system\n");
 	else
@@ -312,6 +331,10 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 	char buffer[256];
 	int ret = 0;
 
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] syscall entry pid=%d cmd=%#x\n",
+			task_pid_nr(current), cmd);
+
 	/* We only trust the superuser with rebooting the system. */
 	if (!ns_capable(pid_ns->user_ns, CAP_SYS_BOOT))
 		return -EPERM;
@@ -339,7 +362,12 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 	if ((cmd == LINUX_REBOOT_CMD_POWER_OFF) && !pm_power_off)
 		cmd = LINUX_REBOOT_CMD_HALT;
 
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] transition mutex begin locked=%d\n",
+			mutex_is_locked(&system_transition_mutex));
 	mutex_lock(&system_transition_mutex);
+	if (initcall_debug)
+		pr_info("[S17/REBOOT] transition mutex acquired\n");
 	switch (cmd) {
 	case LINUX_REBOOT_CMD_RESTART:
 		kernel_restart(NULL);
@@ -364,12 +392,16 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 		break;
 
 	case LINUX_REBOOT_CMD_RESTART2:
+		if (initcall_debug)
+			pr_info("[S17/REBOOT] restart2 argument copy begin\n");
 		ret = strncpy_from_user(&buffer[0], arg, sizeof(buffer) - 1);
 		if (ret < 0) {
 			ret = -EFAULT;
 			break;
 		}
 		buffer[sizeof(buffer) - 1] = '\0';
+		if (initcall_debug)
+			pr_info("[S17/REBOOT] restart2 argument copy done\n");
 
 		kernel_restart(buffer);
 		break;
