@@ -127,6 +127,9 @@ void syscore_shutdown(void)
 			if (initcall_debug)
 				pr_info("PM: Calling %pF\n", ops->shutdown);
 			ops->shutdown();
+			if (initcall_debug)
+				pr_info("[S17/REBOOT] syscore %ps done\n",
+					ops->shutdown);
 		}
 
 	mutex_unlock(&syscore_ops_lock);

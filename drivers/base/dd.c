@@ -58,6 +58,28 @@ static atomic_t deferred_trigger_count = ATOMIC_INIT(0);
 static struct dentry *deferred_devices;
 static bool initcalls_done;
 
+/* S17 deferred-probe diagnostics: copied names remain readable if a worker stalls. */
+static struct task_struct *s17_deferred_task;
+static int s17_deferred_pid;
+static bool s17_deferred_active;
+static char s17_deferred_device[128];
+static char s17_deferred_driver[128];
+static int s17_deferred_result;
+
+static int s17_deferred_probe_show(struct seq_file *s, void *data)
+{
+	if (!mutex_trylock(&deferred_probe_mutex)) {
+		seq_puts(s, "snapshot busy: deferred_probe_mutex locked\n");
+		return 0;
+	}
+	seq_printf(s, "active=%d pid=%d device=%s driver=%s last_result=%d\n",
+		s17_deferred_active, s17_deferred_pid, s17_deferred_device,
+		s17_deferred_driver, READ_ONCE(s17_deferred_result));
+	mutex_unlock(&deferred_probe_mutex);
+	return 0;
+}
+DEFINE_SHOW_ATTRIBUTE(s17_deferred_probe);
+
 /*
  * In some cases, like suspend to RAM or hibernation, It might be reasonable
  * to prohibit probing of devices as it could be unsafe.
@@ -85,6 +107,9 @@ static void deferred_probe_work_func(struct work_struct *work)
 	 * from under our feet.
 	 */
 	mutex_lock(&deferred_probe_mutex);
+	WRITE_ONCE(s17_deferred_task, current);
+	s17_deferred_pid = task_pid_nr(current);
+	s17_deferred_active = true;
 	while (!list_empty(&deferred_probe_active_list)) {
 		private = list_first_entry(&deferred_probe_active_list,
 					typeof(*dev->p), deferred_probe);
@@ -92,6 +117,8 @@ static void deferred_probe_work_func(struct work_struct *work)
 		list_del_init(&private->deferred_probe);
 
 		get_device(dev);
+		strscpy(s17_deferred_device, dev_name(dev), sizeof(s17_deferred_device));
+		s17_deferred_driver[0] = '\0';
 
 		/*
 		 * Drop the mutex while probing each device; the probe path may
@@ -113,6 +140,8 @@ static void deferred_probe_work_func(struct work_struct *work)
 
 		put_device(dev);
 	}
+	s17_deferred_active = false;
+	WRITE_ONCE(s17_deferred_task, NULL);
 	mutex_unlock(&deferred_probe_mutex);
 }
 static DECLARE_WORK(deferred_probe_work, deferred_probe_work_func);
@@ -275,6 +304,8 @@ static DECLARE_DELAYED_WORK(deferred_probe_timeout_work, deferred_probe_timeout_
  */
 static int deferred_probe_initcall(void)
 {
+	debugfs_create_file("s17_deferred_probe", 0444, NULL,
+			    NULL, &s17_deferred_probe_fops);
 	deferred_devices = debugfs_create_file("devices_deferred", 0444, NULL,
 					       NULL, &deferred_devs_fops);
 
@@ -503,9 +534,21 @@ re_probe:
 			goto probe_failed;
 	}
 
+	if (current == READ_ONCE(s17_deferred_task)) {
+		mutex_lock(&deferred_probe_mutex);
+		strscpy(s17_deferred_driver, drv->name, sizeof(s17_deferred_driver));
+		s17_deferred_result = -EINPROGRESS;
+		mutex_unlock(&deferred_probe_mutex);
+		dev_notice(dev, "[S17/PROBE] deferred driver=%s begin\n", drv->name);
+	}
 	if (dev->bus->probe) {
 		BOOTPROF_TIME_LOG_START(ts);
 		ret = dev->bus->probe(dev);
+		if (current == READ_ONCE(s17_deferred_task)) {
+			WRITE_ONCE(s17_deferred_result, ret);
+			dev_notice(dev, "[S17/PROBE] deferred driver=%s returned=%d\n",
+				   drv->name, ret);
+		}
 		BOOTPROF_TIME_LOG_END(ts);
 		bootprof_probe(ts, dev, drv, (unsigned long)dev->bus->probe);
 		if (ret)
@@ -513,6 +556,11 @@ re_probe:
 	} else if (drv->probe) {
 		BOOTPROF_TIME_LOG_START(ts);
 		ret = drv->probe(dev);
+		if (current == READ_ONCE(s17_deferred_task)) {
+			WRITE_ONCE(s17_deferred_result, ret);
+			dev_notice(dev, "[S17/PROBE] deferred driver=%s returned=%d\n",
+				   drv->name, ret);
+		}
 		BOOTPROF_TIME_LOG_END(ts);
 		bootprof_probe(ts, dev, drv, (unsigned long)drv->probe);
 		if (ret)
