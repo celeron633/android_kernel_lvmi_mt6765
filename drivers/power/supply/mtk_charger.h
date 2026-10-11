@@ -307,7 +307,7 @@ struct mtk_charger {
 	struct battery_thermal_protection_data thermal;
 
 	struct chg_alg_device *alg[MAX_ALG_NO];
-	struct notifier_block chg_alg_nb;
+	struct notifier_block chg_alg_nb[MAX_ALG_NO];
 	bool enable_hv_charging;
 
 	/* water detection */

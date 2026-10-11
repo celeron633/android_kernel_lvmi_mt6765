@@ -1328,56 +1328,14 @@ stop_charging:
 
 static bool charger_init_algo(struct mtk_charger *info)
 {
+	static const char * const alg_names[] = { "pe4", "pd", "pe2", "pe" };
 	struct chg_alg_device *alg;
-	int idx = 0;
+	int idx, ret;
 
-	alg = get_chg_alg_by_name("pe4");
-	info->alg[idx] = alg;
-	if (alg == NULL)
-		chr_err("get pe4 fail\n");
-	else {
-		chr_err("get pe4 success\n");
-		alg->config = info->config;
-		chg_alg_init_algo(alg);
-		register_chg_alg_notifier(alg, &info->chg_alg_nb);
-	}
-	idx++;
-
-	alg = get_chg_alg_by_name("pd");
-	info->alg[idx] = alg;
-	if (alg == NULL)
-		chr_err("get pd fail\n");
-	else {
-		chr_err("get pd success\n");
-		alg->config = info->config;
-		chg_alg_init_algo(alg);
-		register_chg_alg_notifier(alg, &info->chg_alg_nb);
-	}
-	idx++;
-
-	alg = get_chg_alg_by_name("pe2");
-	info->alg[idx] = alg;
-	if (alg == NULL)
-		chr_err("get pe2 fail\n");
-	else {
-		chr_err("get pe2 success\n");
-		alg->config = info->config;
-		chg_alg_init_algo(alg);
-		register_chg_alg_notifier(alg, &info->chg_alg_nb);
-	}
-	idx++;
-
-	alg = get_chg_alg_by_name("pe");
-	info->alg[idx] = alg;
-	if (alg == NULL)
-		chr_err("get pe fail\n");
-	else {
-		chr_err("get pe success\n");
-		alg->config = info->config;
-		chg_alg_init_algo(alg);
-		register_chg_alg_notifier(alg, &info->chg_alg_nb);
-	}
-
+	/* Resolve required hardware before installing any algorithm notifier.
+	 * Otherwise a probe retry can register the same block twice and turn
+	 * its notifier chain into a self-referencing list.
+	 */
 	info->chg1_dev = get_charger_by_name("primary_chg");
 	if (info->chg1_dev)
 		chr_err("Found primary charger\n");
@@ -1395,6 +1353,25 @@ static bool charger_init_algo(struct mtk_charger *info)
 			chr_err("*** Error : can't find secondary charger ***\n");
 			return false;
 		}
+	}
+
+	for (idx = 0; idx < ARRAY_SIZE(alg_names); idx++) {
+		alg = get_chg_alg_by_name(alg_names[idx]);
+		if (!alg)
+			continue;
+
+		alg->config = info->config;
+		ret = chg_alg_init_algo(alg);
+		if (ret < 0) {
+			chr_err("%s init failed: %d\n", alg_names[idx], ret);
+			continue;
+		}
+		ret = register_chg_alg_notifier(alg, &info->chg_alg_nb[idx]);
+		if (ret < 0) {
+			chr_err("%s notifier failed: %d\n", alg_names[idx], ret);
+			continue;
+		}
+		info->alg[idx] = alg;
 	}
 
 	chr_err("register chg1 notifier %d %d\n",
@@ -1556,6 +1533,10 @@ static int charger_routine_thread(void *arg)
 				is_module_init_done = true;
 			else {
 				chr_err("charger_init fail\n");
+				/* No charging work can run until the device probes. */
+				spin_lock_irqsave(&info->slock, flags);
+				__pm_relax(info->charger_wakelock);
+				spin_unlock_irqrestore(&info->slock, flags);
 				msleep(5000);
 			}
 		}
@@ -2116,7 +2097,8 @@ static int mtk_charger_probe(struct platform_device *pdev)
 						 &info->pd_nb);
 	}
 
-	info->chg_alg_nb.notifier_call = chg_alg_event;
+	for (i = 0; i < MAX_ALG_NO; i++)
+		info->chg_alg_nb[i].notifier_call = chg_alg_event;
 
 	kthread_run(charger_routine_thread, info, "charger_thread");
 
