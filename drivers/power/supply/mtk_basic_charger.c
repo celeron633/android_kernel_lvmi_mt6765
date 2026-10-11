@@ -435,12 +435,18 @@ static int do_algorithm(struct mtk_charger *info)
 	info->is_chg_done = chg_done;
 
 	if (is_basic == true) {
-		charger_dev_set_input_current(info->chg1_dev,
+		ret = charger_dev_set_input_current(info->chg1_dev,
 			pdata->input_current_limit);
-		charger_dev_set_charging_current(info->chg1_dev,
+		if (ret < 0)
+			goto limits_failed;
+		ret = charger_dev_set_charging_current(info->chg1_dev,
 			pdata->charging_current_limit);
-		charger_dev_set_constant_voltage(info->chg1_dev,
+		if (ret < 0)
+			goto limits_failed;
+		ret = charger_dev_set_constant_voltage(info->chg1_dev,
 			info->setting.cv);
+		if (ret < 0)
+			goto limits_failed;
 
 		if (pdata->input_current_limit == 0 ||
 		    pdata->charging_current_limit == 0)
@@ -456,6 +462,11 @@ static int do_algorithm(struct mtk_charger *info)
 		charger_dev_dump_registers(info->chg2_dev);
 
 	return 0;
+
+limits_failed:
+	chr_err("charger limits failed: %d; disable charging\n", ret);
+	charger_dev_enable(info->chg1_dev, false);
+	return ret;
 }
 
 static int enable_charging(struct mtk_charger *info,
