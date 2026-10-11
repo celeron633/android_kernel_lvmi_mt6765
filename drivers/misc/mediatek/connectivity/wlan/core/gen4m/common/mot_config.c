@@ -103,6 +103,9 @@ void get_moto_config_file_name(char* name, WIFI_CFG_ENUM index)
 
     num = sizeof(products_list) / sizeof(moto_product);
     for (i = 0; i < num; i++) {
+        /* Missing Motorola bootargs must retain the caller's defaults. */
+        if (!products_list[i].hw_device[0])
+            break;
         if (strncmp(device, (products_list + i)->hw_device, ARRAY_VALUE_MAX) == 0) {
             if (strncmp(radio, (products_list + i)->hw_radio, ARRAY_VALUE_MAX) == 0 ||
                 strncmp((products_list + i)->hw_radio, "all", ARRAY_VALUE_MAX) == 0) {
