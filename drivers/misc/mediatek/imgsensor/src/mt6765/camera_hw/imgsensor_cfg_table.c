@@ -39,7 +39,12 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config[] = {
 		IMGSENSOR_I2C_DEV_1,
 		{
 			{IMGSENSOR_HW_ID_MCLK, IMGSENSOR_HW_PIN_MCLK},
+#if defined(IMX278_MIPI_RAW)
+			/* S17 routes the front AVDD through cam1_vcama. */
+			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_AVDD},
+#else
 			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_AVDD},
+#endif
 			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DOVDD},
 			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DVDD},
 			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_PDN},
@@ -139,6 +144,22 @@ struct IMGSENSOR_HW_POWER_SEQ platform_power_sequence[] = {
 
 /* Stock MediaTek sensor power sequence table extracted from stock vmlinux */
 struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence[] = {
+#if defined(IMX278_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_IMX278_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{DOVDD, Vol_1800, 10},
+			{AVDD, Vol_2800, 10},
+			{DVDD, Vol_1200, 10},
+			{AFVDD, Vol_2800, 15},
+			{PDN, Vol_Low, 10},
+			{RST, Vol_Low, 10},
+			{PDN, Vol_High, 10},
+			{RST, Vol_High, 10},
+		},
+	},
+#endif
 #if defined(GC8034_MIPI_RAW)
 	{
 		SENSOR_DRVNAME_GC8034_MIPI_RAW,
@@ -207,6 +228,18 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence[] = {
 	{
 		SENSOR_DRVNAME_GC5025SUB_MIPI_RAW,
 		{
+#if defined(IMX278_MIPI_RAW)
+			/* S17 stock uses the same sequence for both sensors. */
+			{SensorMCLK, Vol_High, 0},
+			{DOVDD, Vol_1800, 10},
+			{AVDD, Vol_2800, 10},
+			{DVDD, Vol_1200, 10},
+			{AFVDD, Vol_2800, 15},
+			{PDN, Vol_Low, 10},
+			{RST, Vol_Low, 10},
+			{PDN, Vol_High, 10},
+			{RST, Vol_High, 10},
+#else
 			{SensorMCLK, Vol_High, 0},
 			{PDN, Vol_Low, 1},
 			{RST, Vol_Low, 10},
@@ -216,6 +249,7 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence[] = {
 			{AFVDD, Vol_2800, 1},
 			{PDN, Vol_High, 5},
 			{RST, Vol_High, 5},
+#endif
 		},
 	},
 #endif
