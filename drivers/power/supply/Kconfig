@@ -870,6 +870,16 @@ config CHARGER_BQ25601
 	  It depends on
 	  the config MTK_CHARGER.
 
+config CHARGER_PSC5425E
+	bool "Prisemi PSC5425E charger"
+	depends on I2C && OF && MTK_CHARGER && REGULATOR && RTC_CLASS
+	help
+	  Enable the PSC5425E charger and USB OTG regulator used by
+	  S17Promini. Charge status is polled by the MediaTek manager.
+	  The driver checks the device ID before programming charging
+	  parameters, exposes its discrete current and voltage settings
+	  through charger class, and services the watchdog only during OTG.
+
 config CHARGER_SGM41512
 	bool "Charger Driver for Richtek SGM41512 Charger IC"
 	default n
