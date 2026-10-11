@@ -31,6 +31,12 @@ Local changes:
 - WMT's mmi_get_bootarg is file-local. gen4m retains its separate global
   implementation for wlan_lib.c, avoiding a built-in symbol collision
   while keeping the two parsers' bootargs buffer ownership separate.
+- WMT and Wi-Fi configuration selectors stop at the empty product-table
+  terminator. Devices without Motorola bootargs use the existing defaults,
+  instead of requesting WMT_SOC_.cfg or .cfg.
+- MT6765's driver DMA MPU region is 24, matching S17's stock Wi-Fi module
+  disassembly. Access permissions and the actual allocated range are kept;
+  the region/range/permission words are logged for runtime verification.
 - The loader's initialization chain calls WMT, BT and Wi-Fi. FM and GPS
   callbacks are excluded. Initialization is serialized and caches the real
   result, including failures. The in-tree BT and Wi-Fi hooks have no weak
@@ -50,4 +56,7 @@ remove vendor insmod actions for these drivers. S17 does not enable GPS/FM.
 
 The integration passed Kconfig, Kbuild rule and init-script checks. The user
 built it and confirmed the reported compile/link issues are resolved after
-the local build fixes. Wi-Fi/BT hardware behavior is not yet verified.
+the local build fixes. After the configuration selector and DMA MPU region
+fixes, the user confirmed Wi-Fi startup, scanning, connection and Internet
+access, as well as Bluetooth device discovery. Suspend/resume, Bluetooth
+pairing and audio testing remain pending.
