@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/* S17 Pro mini power configuration; included by s17promini.dtsi. */
+
+/ {
+	regulator_vibrator {
+		compatible = "regulator-vibrator";
+		min-volt = <0x16e360>;
+		max-volt = <0x2ab980>;
+		min-limit = <0x0f>;
+		max-limit = <0x3a98>;
+		vib-supply = <0x02>;
+		phandle = <0x6b>;
+	};
+};

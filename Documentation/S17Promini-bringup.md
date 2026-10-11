@@ -1,17 +1,20 @@
 # S17Promini board configuration
 
 Initial board description on `S17Promini-bringup`, based on the marlon tree at
-`9fd0d5ca5f05` and S17Promini stock firmware. This is a configuration/DTB baseline,
-not a boot-tested kernel.
+`9fd0d5ca5f05` and S17Promini stock firmware. The source kernel now has device-tested display, touch, audio, microphone,
+vibration, cameras, Wi-Fi, RIL, CPU frequency scaling, reboot and shutdown.
+Some sensor drivers remain outstanding.
 
 ## Inputs and layout
 
 - `arch/arm64/configs/S17Promini_defconfig`: stock `kernel.config`, normalized
   through this tree's Kconfig and `savedefconfig`. Project `r65v3_pmz_w1a`,
-  384x854 display, and PowerVR `rgx doma m1.11ED5425693` match stock.
-- `arch/arm64/boot/dts/mediatek/s17promini-stock.dtsi`: complete stock boot DTB
-  after applying stock DTBO entry 0. Numeric phandles and stock board wiring
-  are kept together, including regulator, GPIO and reserved-memory properties.
+  384x854 display, and PowerVR `rgx doma m1.13ED5776728` matches the vendor userspace.
+- `arch/arm64/boot/dts/mediatek/s17promini.dtsi`: hardware description entry
+  point, split into boot defaults, power, CPU, memory, platform, peripherals, multimedia, board,
+  audio, services and bootloader symbol files. Derived initially from the
+  factory boot DTB with DTBO entry 0 applied; current board fixes are retained.
+  Explicit numeric phandles and symbol paths remain stable for LK overlays.
 - `arch/arm64/boot/dts/mediatek/S17Promini.dts`: board identity and actual LK
   panel name. LK logs identify `axs15260_dsi_6580_hd`; the static stock DTBO
   contains a stale NT35695B BSP name.
@@ -34,8 +37,8 @@ fdtoverlay -i dtb-0.dtb -o stock-merged.dtb stock-overlay-0.dtbo
 dtc -I dtb -O dts -o stock-merged.dts stock-merged.dtb
 ```
 
-The `.dtsi` contains that decompiled tree, with `/dts-v1/;` replaced by an
-import provenance comment. Numeric references generate dtc warnings because
+The hardware description originated from that decompiled tree and is now
+organized into subsystem DTSI files with provenance documented above. Numeric references generate dtc warnings because
 decompilation loses source reference markers. Stock BSP binding warnings also
 remain; hardware properties have not been rewritten merely to silence them.
 
@@ -99,3 +102,11 @@ root `compatible`, and `/chosen/atag,videolfb-lcmname`. All remaining property
 bytes match stock, including numeric phandle references.
 The later AXS15260 reconstruction adds a touch reset GPIO property to the
 bias node, while retaining the imported stock `.dtsi` unchanged.
+
+## Hardware description refactor validation
+
+The subsystem split preserves node/property order, values, explicit phandles
+and the bootloader symbol table. Standalone cpp/dtc builds before and after
+the refactor produce byte-identical DTBs. This is a structural refactor, not
+a replacement with the generic MT6765 BSP tree. Remaining numeric references
+can be migrated to labels separately with DTBO compatibility validation.

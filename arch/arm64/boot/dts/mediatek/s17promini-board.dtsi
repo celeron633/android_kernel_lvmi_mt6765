@@ -1,0 +1,392 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/* S17 Pro mini board configuration; included by s17promini.dtsi. */
+
+/ {
+	camera_af_hw_node {
+		status = "okay";
+		camaf_m1_pmic-supply = <0x8c>;
+		compatible = "mediatek,camera_af_lens";
+		phandle = <0xdc>;
+	};
+
+	flashlight_core {
+		compatible = "mediatek,flashlight_core";
+		phandle = <0xdd>;
+	};
+
+	flashlights_mt6370 {
+		compatible = "mediatek,flashlights_mt6370";
+		decouple = <0x00>;
+		phandle = <0xde>;
+
+		channel@1 {
+			type = <0x00>;
+			ct = <0x00>;
+			part = <0x00>;
+		};
+
+		channel@2 {
+			type = <0x00>;
+			ct = <0x01>;
+			part = <0x00>;
+		};
+	};
+
+	flashlights_isink {
+		compatible = "mediatek,flashlights_isink";
+		decouple = <0x01>;
+		phandle = <0xdf>;
+
+		channel@1 {
+			type = <0x00>;
+			ct = <0x00>;
+			part = <0x00>;
+		};
+
+		channel@2 {
+			type = <0x00>;
+			ct = <0x01>;
+			part = <0x00>;
+		};
+	};
+
+	flashlights_dummy_gpio {
+		status = "okay";
+		pinctrl-1 = <0x125>;
+		pinctrl-0 = <0x124>;
+		pinctrl-names = "dummy_gpio_low", "dummy_gpio_high";
+		compatible = "mediatek,flashlights_dummy_gpio";
+		decouple = <0x01>;
+		phandle = <0xe0>;
+
+		channel@1 {
+			type = <0x00>;
+			ct = <0x00>;
+			part = <0x00>;
+		};
+
+		channel@2 {
+			type = <0x00>;
+			ct = <0x01>;
+			part = <0x00>;
+		};
+	};
+
+	led_strobe {
+		compatible = "mediatek,leds_strobe_ocp8111";
+		gpio-strobe-mode = <0x1f 0xad 0x00>;
+		gpio-strobe-enable = <0x1f 0xab 0x00>;
+	};
+
+	gps {
+		compatible = "mediatek,gps";
+	};
+
+	fmradio {
+		compatible = "mediatek,fmradio";
+		phandle = <0xe1>;
+	};
+
+	gyro {
+		compatible = "mediatek,gyroscope";
+		phandle = <0xe2>;
+	};
+
+	als_ps@0 {
+		compatible = "mediatek,als_ps";
+		phandle = <0xe3>;
+	};
+
+	ccu@1a0b1000 {
+		compatible = "mediatek,ccu";
+		reg = <0x00 0x1a0b1000 0x00 0x1000>;
+		interrupts = <0x00 0xf6 0x08>;
+		clocks = <0x63 0x08 0x35 0x09>;
+		clock-names = "CCU_CLK_CAM_CCU", "CAM_PWR";
+	};
+
+	lk_charger {
+		compatible = "mediatek,lk_charger";
+		enable_anime;
+		enable_pe_plus;
+		enable_pd20_reset;
+		power_path_support;
+		max_charger_voltage = <0x632ea0>;
+		fast_charge_voltage = <0x2dc6c0>;
+		usb_charger_current = <0x7a120>;
+		ac_charger_current = <0x1e8480>;
+		ac_charger_input_current = <0x16e360>;
+		non_std_ac_charger_current = <0x7a120>;
+		charging_host_charger_current = <0x16e360>;
+		ta_ac_charger_current = <0x2dc6c0>;
+		pd_charger_current = <0x7a120>;
+		temp_t4_threshold = <0x32>;
+		temp_t3_threshold = <0x2d>;
+		temp_t1_threshold = <0x00>;
+		phandle = <0xe4>;
+	};
+
+	pe {
+		compatible = "mediatek,charger,pe";
+		gauge = <0x66>;
+		ta_12v_support;
+		ta_9v_support;
+		pe_ichg_level_threshold = <0xf4240>;
+		ta_start_battery_soc = <0x00>;
+		ta_stop_battery_soc = <0x55>;
+		min_charger_voltage = <0x4630c0>;
+		ta_ac_12v_input_current = <0x30d400>;
+		ta_ac_9v_input_current = <0x30d400>;
+		ta_ac_7v_input_current = <0x30d400>;
+		pe_charger_current = <0x2dc6c0>;
+		phandle = <0xe5>;
+	};
+
+	pe2 {
+		compatible = "mediatek,charger,pe2";
+		gauge = <0x66>;
+		pe20_ichg_level_threshold = <0xf4240>;
+		ta_start_battery_soc = <0x00>;
+		ta_stop_battery_soc = <0x55>;
+		min_charger_voltage = <0x4630c0>;
+		cable_imp_threshold = <0x2bb>;
+		vbat_cable_imp_threshold = <0x3b8260>;
+		sc_input_current = <0x30d400>;
+		sc_charger_current = <0x2dc6c0>;
+		dcs_input_current = <0x30d400>;
+		dcs_chg1_charger_current = <0x1b7740>;
+		dcs_chg2_charger_current = <0x1b7740>;
+		dual_polling_ieoc = <0x6ddd0>;
+		slave_mivr_diff = <0x186a0>;
+		phandle = <0xe6>;
+	};
+
+	pdc {
+		compatible = "mediatek,charger,pd";
+		gauge = <0x66>;
+		min_charger_voltage = <0x4630c0>;
+		pd_vbus_low_bound = <0x4c4b40>;
+		pd_vbus_upper_bound = <0xb71b00>;
+		vsys_watt = <0x4c4b40>;
+		ibus_err = <0x0e>;
+		pd_stop_battery_soc = <0x50>;
+		sc_input_current = <0x30d400>;
+		sc_charger_current = <0x2dc6c0>;
+		dcs_input_current = <0x30d400>;
+		dcs_chg1_charger_current = <0x1b7740>;
+		dcs_chg2_charger_current = <0x1b7740>;
+		dual_polling_ieoc = <0x6ddd0>;
+		slave_mivr_diff = <0x186a0>;
+		phandle = <0xe7>;
+	};
+
+	pe4 {
+		compatible = "mediatek,charger,pe4";
+		gauge = <0x66>;
+		min_charger_voltage = <0x4630c0>;
+		pe40_stop_battery_soc = <0x50>;
+		high_temp_to_leave_pe40 = <0x2e>;
+		high_temp_to_enter_pe40 = <0x27>;
+		low_temp_to_leave_pe40 = <0x0a>;
+		low_temp_to_enter_pe40 = <0x10>;
+		ibus_err = <0x0e>;
+		pe40_r_cable_1a_lower = <0x1f4>;
+		pe40_r_cable_2a_lower = <0x15f>;
+		pe40_r_cable_3a_lower = <0xf0>;
+		sc_input_current = <0x30d400>;
+		sc_charger_current = <0x2dc6c0>;
+		dcs_input_current = <0x30d400>;
+		dcs_chg1_charger_current = <0x1b7740>;
+		dcs_chg2_charger_current = <0x1b7740>;
+		dual_polling_ieoc = <0x6ddd0>;
+		slave_mivr_diff = <0x186a0>;
+		phandle = <0xe8>;
+	};
+
+	charger {
+		compatible = "mediatek,charger";
+		gauge = <0x66>;
+		charger = <0x78>;
+		bootmode = <0x2a>;
+		pmic = <0x30>;
+		algorithm_name = "Basic";
+		charger_configuration = <0x00>;
+		battery_cv = <0x426030>;
+		max_charger_voltage = <0x632ea0>;
+		min_charger_voltage = <0x4630c0>;
+		jeita_temp_above_t4_cv = <0x40b280>;
+		jeita_temp_t3_to_t4_cv = <0x40b280>;
+		jeita_temp_t2_to_t3_cv = <0x423920>;
+		jeita_temp_t1_to_t2_cv = <0x40b280>;
+		jeita_temp_t0_to_t1_cv = <0x3da540>;
+		jeita_temp_below_t0_cv = <0x3da540>;
+		temp_t4_thres = <0x32>;
+		temp_t4_thres_minus_x_degree = <0x2f>;
+		temp_t3_thres = <0x2d>;
+		temp_t3_thres_minus_x_degree = <0x27>;
+		temp_t2_thres = <0x0a>;
+		temp_t2_thres_plus_x_degree = <0x10>;
+		temp_t1_thres = <0x00>;
+		temp_t1_thres_plus_x_degree = <0x06>;
+		temp_t0_thres = <0x00>;
+		temp_t0_thres_plus_x_degree = <0x00>;
+		temp_neg_10_thres = <0x00>;
+		enable_min_charge_temp;
+		min_charge_temp = <0x00>;
+		min_charge_temp_plus_x_degree = <0x06>;
+		max_charge_temp = <0x32>;
+		max_charge_temp_minus_x_degree = <0x2f>;
+		usb_charger_current = <0x7a120>;
+		ac_charger_current = <0x10c8e0>;
+		ac_charger_input_current = <0x10c8e0>;
+		charging_host_charger_current = <0x10c8e0>;
+		enable_dynamic_mivr;
+		min_charger_voltage_1 = <0x432380>;
+		min_charger_voltage_2 = <0x401640>;
+		max_dmivr_charger_current = <0x1b7740>;
+		phandle = <0x2e>;
+	};
+
+	pd_adapter {
+		compatible = "mediatek,pd_adapter";
+		adapter_name = "pd_adapter";
+		phandle = <0xe9>;
+	};
+
+	extcon_usb {
+		id-gpios = <0x1f 0x6e 0x00>;
+		charger = <0x78>;
+		compatible = "mediatek,extcon-usb";
+		vbus-supply;
+		vbus-voltage = <0x4c4b40>;
+		vbus-current = <0x1b7740>;
+		dev-conn = <0x68>;
+		mediatek,bypss-typec-sink = <0x01>;
+		phandle = <0xea>;
+	};
+
+	rt9465_slave_chr {
+		interrupts = <0x17 0x08 0x17 0x00>;
+		interrupt-parent = <0x1f>;
+		compatible = "richtek,rt9465";
+		status = "okay";
+		phandle = <0xeb>;
+	};
+
+	rt-pd-manager {
+		compatible = "mediatek,rt-pd-manager";
+	};
+
+	mt6370_pmu_eint {
+		status = "okay";
+		interrupts = <0x0b 0x02 0x0b 0x00>;
+		interrupt-parent = <0x1f>;
+		phandle = <0xec>;
+	};
+
+	mt6370_pd_eint {
+		phandle = <0xed>;
+	};
+
+	irtx_pwm {
+		status = "okay";
+		pinctrl-1 = <0x117>;
+		pinctrl-0 = <0x116>;
+		pinctrl-names = "irtx_gpio_led_default", "irtx_gpio_led_set";
+		compatible = "mediatek,irtx-pwm";
+		pwm_ch = <0x00>;
+		pwm_data_invert = <0x00>;
+		phandle = <0xee>;
+	};
+
+	odm {
+		compatible = "simple-bus";
+		phandle = <0xef>;
+
+		vibrator@0 {
+			phandle = <0x148>;
+			vib_vol = <0x09>;
+			vib_limit = <0x09>;
+			vib_timer = <0x19>;
+			compatible = "mediatek,vibrator";
+		};
+
+		led@6 {
+			phandle = <0x147>;
+			pwm_config = <0x00 0x03 0x00 0x00 0x00>;
+			data = <0x01>;
+			led_mode = <0x05>;
+			compatible = "mediatek,lcd-backlight";
+		};
+
+		led@5 {
+			phandle = <0x146>;
+			pwm_config = <0x00 0x00 0x00 0x00 0x00>;
+			data = <0x01>;
+			led_mode = <0x00>;
+			compatible = "mediatek,button-backlight";
+		};
+
+		led@4 {
+			phandle = <0x145>;
+			pwm_config = <0x00 0x00 0x00 0x00 0x00>;
+			data = <0x01>;
+			led_mode = <0x00>;
+			compatible = "mediatek,keyboard-backlight";
+		};
+
+		led@3 {
+			phandle = <0x144>;
+			pwm_config = <0x00 0x00 0x00 0x00 0x00>;
+			data = <0x01>;
+			led_mode = <0x00>;
+			compatible = "mediatek,jogball-backlight";
+		};
+
+		led@2 {
+			phandle = <0x143>;
+			pwm_config = <0x00 0x00 0x00 0x00 0x00>;
+			data = <0x01>;
+			led_mode = <0x00>;
+			compatible = "mediatek,blue";
+		};
+
+		led@1 {
+			phandle = <0x142>;
+			pwm_config = <0x00 0x00 0x00 0x00 0x00>;
+			data = <0x01>;
+			led_mode = <0x00>;
+			compatible = "mediatek,green";
+		};
+
+		led@0 {
+			phandle = <0x141>;
+			pwm_config = <0x00 0x00 0x00 0x00 0x00>;
+			data = <0x01>;
+			led_mode = <0x00>;
+			compatible = "mediatek,red";
+		};
+	};
+
+	memory-ssmr-features {
+		compatible = "mediatek,memory-ssmr-features";
+		2d_fr-size = <0x00 0x8000000>;
+		prot-region-based-size = <0x00 0x8000000>;
+		phandle = <0xf0>;
+	};
+
+	ssmr {
+		compatible = "mediatek,trusted_mem";
+		memory-region = <0x69>;
+	};
+
+	radio_md_cfg {
+		compatible = "mediatek,radio_md_cfg";
+		phandle = <0xf1>;
+	};
+
+	dynamic_options {
+		compatible = "mediatek,dynamic_options";
+		phandle = <0xf2>;
+	};
+};

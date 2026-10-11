@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * S17 Pro mini hardware description. Initially recovered from the factory
+ * boot DTB with DTBO entry 0 applied, then maintained for this board.
+ * Explicit phandle values and symbol paths are retained for LK overlays.
+ */
+
+/ {
+	model = "MT6765";
+	compatible = "mediatek,MT6765";
+	interrupt-parent = <0x01>;
+	#address-cells = <0x02>;
+	#size-cells = <0x02>;
+
+};
+
+#include "s17promini-boot.dtsi"
+#include "s17promini-power.dtsi"
+#include "s17promini-cpu.dtsi"
+#include "s17promini-memory.dtsi"
+#include "s17promini-platform.dtsi"
+#include "s17promini-peripherals.dtsi"
+#include "s17promini-multimedia.dtsi"
+#include "s17promini-board.dtsi"
+#include "s17promini-audio.dtsi"
+#include "s17promini-services.dtsi"
+#include "s17promini-symbols.dtsi"

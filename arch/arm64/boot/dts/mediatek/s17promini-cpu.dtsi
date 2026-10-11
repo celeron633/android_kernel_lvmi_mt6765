@@ -1,0 +1,503 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/* S17 Pro mini cpu configuration; included by s17promini.dtsi. */
+
+/ {
+	opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+		phandle = <0x05>;
+
+		opp0 {
+			opp-hz = <0x00 0x35a4e900>;
+			opp-microvolt = <0x927c0>;
+		};
+
+		opp1 {
+			opp-hz = <0x00 0x3a5a5ac0>;
+			opp-microvolt = <0x970fe>;
+		};
+
+		opp2 {
+			opp-hz = <0x00 0x40abc940>;
+			opp-microvolt = <0x9d2a6>;
+		};
+
+		opp3 {
+			opp-hz = <0x00 0x48993480>;
+			opp-microvolt = <0xa4cb8>;
+		};
+
+		opp4 {
+			opp-hz = <0x00 0x50869fc0>;
+			opp-microvolt = <0xac6ca>;
+		};
+
+		opp5 {
+			opp-hz = <0x00 0x58740b00>;
+			opp-microvolt = <0xb40dc>;
+		};
+
+		opp6 {
+			opp-hz = <0x00 0x60617640>;
+			opp-microvolt = <0xbbaee>;
+		};
+
+		opp7 {
+			opp-hz = <0x00 0x684ee180>;
+			opp-microvolt = "", "\f5";
+		};
+
+		opp8 {
+			opp-hz = <0x00 0x6c1f7180>;
+			opp-microvolt = <0xcc77c>;
+		};
+
+		opp9 {
+			opp-hz = <0x00 0x6fff43c0>;
+			opp-microvolt = <0xd59f8>;
+		};
+
+		opp10 {
+			opp-hz = <0x00 0x73df1600>;
+			opp-microvolt = <0xdec74>;
+		};
+
+		opp11 {
+			opp-hz = <0x00 0x77bee840>;
+			opp-microvolt = <0xe7ef0>;
+		};
+
+		opp12 {
+			opp-hz = <0x00 0x7b9eba80>;
+			opp-microvolt = <0xf116c>;
+		};
+
+		opp13 {
+			opp-hz = <0x00 0x7f7e8cc0>;
+			opp-microvolt = <0xfa3e8>;
+		};
+
+		opp14 {
+			opp-hz = <0x00 0x840637c0>;
+			opp-microvolt = <0x104ece>;
+		};
+
+		opp15 {
+			opp-hz = <0x00 0x89267940>;
+			opp-microvolt = <0x11121e>;
+		};
+	};
+
+	opp_table1 {
+		compatible = "operating-points-v2";
+		opp-shared;
+		phandle = <0x0d>;
+
+		opp0 {
+			opp-hz = <0x00 0x17d78400>;
+			opp-microvolt = <0x927c0>;
+		};
+
+		opp1 {
+			opp-hz = <0x00 0x1ddca740>;
+			opp-microvolt = <0x9a1d2>;
+		};
+
+		opp2 {
+			opp-hz = <0x00 0x204e4380>;
+			opp-microvolt = <0x9d2a6>;
+		};
+
+		opp3 {
+			opp-hz = <0x00 0x265366c0>;
+			opp-microvolt = <0xa4cb8>;
+		};
+
+		opp4 {
+			opp-hz = <0x00 0x2c67cc40>;
+			opp-microvolt = <0xac6ca>;
+		};
+
+		opp5 {
+			opp-hz = <0x00 0x326cef80>;
+			opp-microvolt = <0xb40dc>;
+		};
+
+		opp6 {
+			opp-hz = <0x00 0x38815500>;
+			opp-microvolt = <0xbbaee>;
+		};
+
+		opp7 {
+			opp-hz = <0x00 0x3e95ba80>;
+			opp-microvolt = "", "\f5";
+		};
+
+		opp8 {
+			opp-hz = <0x00 0x43d48080>;
+			opp-microvolt = <0xcc77c>;
+		};
+
+		opp9 {
+			opp-hz = <0x00 0x49134680>;
+			opp-microvolt = <0xd59f8>;
+		};
+
+		opp10 {
+			opp-hz = <0x00 0x4e520c80>;
+			opp-microvolt = <0xdec74>;
+		};
+
+		opp11 {
+			opp-hz = <0x00 0x5390d280>;
+			opp-microvolt = <0xe7ef0>;
+		};
+
+		opp12 {
+			opp-hz = <0x00 0x58dedac0>;
+			opp-microvolt = <0xf116c>;
+		};
+
+		opp13 {
+			opp-hz = <0x00 0x5e1da0c0>;
+			opp-microvolt = <0xfa3e8>;
+		};
+
+		opp14 {
+			opp-hz = <0x00 0x64414880>;
+			opp-microvolt = <0x104ec4>;
+		};
+
+		opp15 {
+			opp-hz = <0x00 0x6b49d200>;
+			opp-microvolt = <0x11121e>;
+		};
+	};
+
+	opp_table2 {
+		compatible = "operating-points-v2";
+		opp-shared;
+		phandle = <0x04>;
+
+		opp00 {
+			opp-hz = <0x00 0x11e1a300>;
+			opp-microvolt = <0x927c0>;
+		};
+
+		opp01 {
+			opp-hz = <0x00 0x1434bac0>;
+			opp-microvolt = <0x970fe>;
+		};
+
+		opp02 {
+			opp-hz = <0x00 0x175d7200>;
+			opp-microvolt = <0x9d2a6>;
+		};
+
+		opp03 {
+			opp-hz = <0x00 0x1b5bc8c0>;
+			opp-microvolt = <0xa4cb8>;
+		};
+
+		opp04 {
+			opp-hz = <0x00 0x1f4add40>;
+			opp-microvolt = <0xac6ca>;
+		};
+
+		opp05 {
+			opp-hz = <0x00 0x23493400>;
+			opp-microvolt = <0xb40dc>;
+		};
+
+		opp06 {
+			opp-hz = <0x00 0x27384880>;
+			opp-microvolt = <0xbbaee>;
+		};
+
+		opp07 {
+			opp-hz = <0x00 0x2b275d00>;
+			opp-microvolt = "", "\f5";
+		};
+
+		opp08 {
+			opp-hz = <0x00 0x48c3ee0>;
+			opp-microvolt = <0xcc77c>;
+		};
+
+		opp09 {
+			opp-hz = <0x00 0x4c63aa0>;
+			opp-microvolt = <0xd59f8>;
+		};
+
+		opp10 {
+			opp-hz = <0x00 0x501bd00>;
+			opp-microvolt = <0xdec74>;
+		};
+
+		opp11 {
+			opp-hz = <0x00 0x53bb8c0>;
+			opp-microvolt = <0xe7ef0>;
+		};
+
+		opp12 {
+			opp-hz = <0x00 0x36a84f40>;
+			opp-microvolt = <0xf116c>;
+		};
+
+		opp13 {
+			opp-hz = <0x00 0x38ec24c0>;
+			opp-microvolt = <0xfa3e8>;
+		};
+
+		opp14 {
+			opp-hz = <0x00 0x3b9aca00>;
+			opp-microvolt = <0x104ece>;
+		};
+
+		opp15 {
+			opp-hz = <0x00 0x3ea4fcc0>;
+			opp-microvolt = <0x11121e>;
+		};
+	};
+
+	cci {
+		compatible = "mediatek,mtk-cci";
+		clocks = <0x03 0x02>;
+		clock-names = "dsu_clock";
+		operating-points-v2 = <0x04>;
+		phandle = <0x6c>;
+	};
+
+	cpus {
+		#address-cells = <0x01>;
+		#size-cells = <0x00>;
+
+		cpu@000 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x00>;
+			enable-method = "psci";
+			clock-frequency = <0x89267940>;
+			operating-points-v2 = <0x05>;
+			dynamic-power-coefficient = <0x113>;
+			capacity-dmips-mhz = <0x400>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x0e>;
+		};
+
+		cpu@001 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x01>;
+			enable-method = "psci";
+			clock-frequency = <0x89267940>;
+			operating-points-v2 = <0x05>;
+			dynamic-power-coefficient = <0x113>;
+			capacity-dmips-mhz = <0x400>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x0f>;
+		};
+
+		cpu@002 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x02>;
+			enable-method = "psci";
+			clock-frequency = <0x89267940>;
+			operating-points-v2 = <0x05>;
+			dynamic-power-coefficient = <0x113>;
+			capacity-dmips-mhz = <0x400>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x10>;
+		};
+
+		cpu@003 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x03>;
+			enable-method = "psci";
+			clock-frequency = <0x89267940>;
+			operating-points-v2 = <0x05>;
+			dynamic-power-coefficient = <0x113>;
+			capacity-dmips-mhz = <0x400>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x11>;
+		};
+
+		cpu@100 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x100>;
+			enable-method = "psci";
+			clock-frequency = <0x6b49d200>;
+			operating-points-v2 = <0x0d>;
+			dynamic-power-coefficient = <0x55>;
+			capacity-dmips-mhz = <0x321>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x12>;
+		};
+
+		cpu@101 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x101>;
+			enable-method = "psci";
+			clock-frequency = <0x6b49d200>;
+			operating-points-v2 = <0x0d>;
+			dynamic-power-coefficient = <0x55>;
+			capacity-dmips-mhz = <0x321>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x13>;
+		};
+
+		cpu@102 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x102>;
+			enable-method = "psci";
+			clock-frequency = <0x6b49d200>;
+			operating-points-v2 = <0x0d>;
+			dynamic-power-coefficient = <0x55>;
+			capacity-dmips-mhz = <0x321>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x14>;
+		};
+
+		cpu@103 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x103>;
+			enable-method = "psci";
+			clock-frequency = <0x6b49d200>;
+			operating-points-v2 = <0x0d>;
+			dynamic-power-coefficient = <0x55>;
+			capacity-dmips-mhz = <0x321>;
+			cpu-idle-states = <0x06 0x07 0x08 0x09 0x0a 0x0b 0x0c>;
+			phandle = <0x15>;
+		};
+
+		cpu-map {
+
+			cluster0 {
+
+				core0 {
+					cpu = <0x0e>;
+				};
+
+				core1 {
+					cpu = <0x0f>;
+				};
+
+				core2 {
+					cpu = <0x10>;
+				};
+
+				core3 {
+					cpu = <0x11>;
+				};
+			};
+
+			cluster1 {
+
+				core0 {
+					cpu = <0x12>;
+				};
+
+				core1 {
+					cpu = <0x13>;
+				};
+
+				core2 {
+					cpu = <0x14>;
+				};
+
+				core3 {
+					cpu = <0x15>;
+				};
+			};
+		};
+
+		idle-states {
+			entry-method = "arm,psci";
+
+			standby {
+				compatible = "arm,idle-state";
+				arm,psci-suspend-param = <0x01>;
+				entry-latency-us = <0x258>;
+				exit-latency-us = <0x258>;
+				min-residency-us = <0x4b0>;
+				phandle = <0x06>;
+			};
+
+			mcdi-cpu {
+				compatible = "arm,idle-state";
+				arm,psci-suspend-param = <0x10001>;
+				entry-latency-us = <0x258>;
+				exit-latency-us = <0x258>;
+				min-residency-us = <0x4b0>;
+				phandle = <0x07>;
+			};
+
+			mcdi-cluster {
+				compatible = "arm,idle-state";
+				arm,psci-suspend-param = <0x1010001>;
+				entry-latency-us = <0x258>;
+				exit-latency-us = <0x258>;
+				min-residency-us = <0x4b0>;
+				phandle = <0x08>;
+			};
+
+			sodi {
+				compatible = "arm,idle-state";
+				arm,psci-suspend-param = <0x1010002>;
+				entry-latency-us = <0x320>;
+				exit-latency-us = <0x3e8>;
+				min-residency-us = <0x7d0>;
+				phandle = <0x09>;
+			};
+
+			sodi3 {
+				compatible = "arm,idle-state";
+				arm,psci-suspend-param = <0x1010003>;
+				entry-latency-us = <0x320>;
+				exit-latency-us = <0x3e8>;
+				min-residency-us = <0x7d0>;
+				phandle = <0x0a>;
+			};
+
+			dpidle {
+				compatible = "arm,idle-state";
+				arm,psci-suspend-param = <0x1010004>;
+				entry-latency-us = <0x320>;
+				exit-latency-us = <0x3e8>;
+				min-residency-us = <0x7d0>;
+				phandle = <0x0b>;
+			};
+
+			suspend {
+				compatible = "arm,idle-state";
+				arm,psci-suspend-param = <0x1010005>;
+				entry-latency-us = <0x320>;
+				exit-latency-us = <0x3e8>;
+				min-residency-us = <0x7d0>;
+				phandle = <0x0c>;
+			};
+		};
+	};
+
+	psci {
+		compatible = "arm,psci-1.0";
+		method = "smc";
+	};
+
+	pmu {
+		compatible = "arm,armv8-pmuv3";
+		interrupt-parent = <0x16>;
+		interrupts = <0x01 0x07 0x08>;
+	};
+
+	l2c_parity {
+		compatible = "mediatek,l2c_parity-v1";
+		interrupts = <0x00 0x18 0x04 0x00 0x19 0x04>;
+	};
+};

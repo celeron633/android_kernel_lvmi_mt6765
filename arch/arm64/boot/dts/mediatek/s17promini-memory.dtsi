@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/* S17 Pro mini memory configuration; included by s17promini.dtsi. */
+
+/ {
+	memory {
+		device_type = "memory";
+		reg = <0x00 0x40000000 0x00 0x20000000>;
+	};
+
+	reserved-memory {
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+		ranges;
+		phandle = <0x6d>;
+
+		reserve-memory-sspm_share {
+			compatible = "mediatek,reserve-memory-sspm_share";
+			no-map;
+			status = "okay";
+			size = <0x00 0x510000>;
+			alignment = <0x00 0x10000>;
+			alloc-ranges = <0x00 0x40000000 0x00 0x60000000>;
+		};
+
+		reserve-memory-scp_share {
+			compatible = "mediatek,reserve-memory-scp_share";
+			no-map;
+			size = <0x00 0x300000>;
+			alignment = <0x00 0x1000000>;
+			alloc-ranges = <0x00 0x40000000 0x00 0x50000000>;
+		};
+
+		consys-reserve-memory {
+			compatible = "mediatek,consys-reserve-memory";
+			no-map;
+			size = <0x00 0x400000>;
+			alignment = <0x00 0x1000000>;
+			alloc-ranges = <0x00 0x40000000 0x00 0x80000000>;
+			phandle = <0x4c>;
+		};
+
+		wifi-reserve-memory {
+			compatible = "shared-dma-pool";
+			no-map;
+			size = <0x00 0x300000>;
+			alignment = <0x00 0x1000000>;
+			alloc-ranges = <0x00 0x40000000 0x00 0x80000000>;
+			phandle = <0x4d>;
+		};
+
+		ssmr-reserved-cma_memory {
+			compatible = "shared-dma-pool";
+			reusable;
+			size = <0x00 0x10000000>;
+			alignment = <0x00 0x1000000>;
+			alloc-range = <0x00 0xc0000000 0x00 0x10000000>;
+			phandle = <0x69>;
+		};
+
+		ion-carveout-heap {
+			compatible = "mediatek,ion-carveout-heap";
+			no-map;
+			size = <0x00 0x5000>;
+			alignment = <0x00 0x1000>;
+			alloc-ranges = <0x00 0xc0000000 0x00 0x10000000>;
+		};
+	};
+};
