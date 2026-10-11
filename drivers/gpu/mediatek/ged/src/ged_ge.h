@@ -9,8 +9,10 @@
 #include <linux/types.h>
 #include <ged_type.h>
 
-/* Must be the same as region_num in gralloc_extra/ge_config.h */
-#define GE_ALLOC_STRUCT_NUM 13
+/* S17 vendor gralloc_extra/ge_config.h allocates 18 metadata regions.
+ * Keep the GE_ALLOC input copy and entry region count in sync with it.
+ */
+#define GE_ALLOC_STRUCT_NUM 18
 
 GED_ERROR ged_ge_init(void);
 int ged_ge_exit(void);
