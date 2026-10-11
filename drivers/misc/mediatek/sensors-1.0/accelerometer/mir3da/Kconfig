@@ -1,0 +1,11 @@
+config MTK_MIR3DA
+	bool "S17 MIR3DA accelerometer"
+	depends on CUSTOM_KERNEL_ACCELEROMETER && I2C
+	help
+	  MIR3DA NSA_NTO support using the S17 stock register sequence.
+
+config GSENSOR_PROXIMITY
+	bool "S17 acceleration based proximity"
+	depends on MTK_MIR3DA && CUSTOM_KERNEL_ALSPS
+	help
+	  Report the S17 stock posture based proximity state from MIR3DA.

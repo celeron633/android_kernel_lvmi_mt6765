@@ -1259,6 +1259,11 @@ static int alsps_probe(void)
 	/* init real alspseleration driver */
 	err = alsps_real_driver_init();
 	if (err) {
+		/* MIR3DA registers PS after this context, in acc_init(). */
+		if (IS_ENABLED(CONFIG_GSENSOR_PROXIMITY)) {
+			pr_info("PS context ready for MIR3DA registration\n");
+			return 0;
+		}
 		pr_err("alsps real driver init fail\n");
 		goto real_driver_init_fail;
 	}
