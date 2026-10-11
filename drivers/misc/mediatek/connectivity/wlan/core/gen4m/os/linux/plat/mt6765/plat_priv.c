@@ -35,6 +35,8 @@
 #include <mt_emi_api.h>
 #define WIFI_EMI_MEM_OFFSET    0x140000
 #define WIFI_EMI_MEM_SIZE      0x130000
+/* S17 stock kalSetDrvEmiMpuProtection uses region 24 for the DMA pool. */
+#define WIFI_DRIVER_EMI_MPU_REGION 24
 #endif
 
 #define MAX_CPU_FREQ (3 * 1024 * 1024) /* in kHZ */
@@ -92,12 +94,16 @@ void kalSetDrvEmiMpuProtection(phys_addr_t emiPhyBase, uint32_t offset,
 	/*set MPU for EMI share Memory */
 	region_info.start = emiPhyBase + offset;
 	region_info.end = emiPhyBase + offset + size - 1;
-	region_info.region = 29;
+	region_info.region = WIFI_DRIVER_EMI_MPU_REGION;
 	SET_ACCESS_PERMISSION(region_info.apc, LOCK, FORBIDDEN, FORBIDDEN,
 			      FORBIDDEN, FORBIDDEN, FORBIDDEN, FORBIDDEN,
 			      FORBIDDEN, FORBIDDEN, FORBIDDEN, FORBIDDEN,
 			      FORBIDDEN, FORBIDDEN, FORBIDDEN, NO_PROTECTION,
 			      FORBIDDEN, NO_PROTECTION);
+	DBGLOG(INIT, INFO,
+		"Wi-Fi DMA MPU region=%u start=0x%llx end=0x%llx apc=%08x/%08x\n",
+		region_info.region, region_info.start, region_info.end,
+		region_info.apc[0], region_info.apc[1]);
 	emi_mpu_set_protection(&region_info);
 }
 #endif
