@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/* S17 Pro mini boot configuration; included by s17promini.dtsi. */
+
+/ {
+	chosen {
+		atag,videolfb-lcmname = "nt35695B_fhd_dsi_cmd_auo_rt5081_drv";
+		atag,videolfb-vramSize = <0x17bb000>;
+		atag,videolfb-fps = <0x1770>;
+		atag,videolfb-islcm_inited = <0x00>;
+		atag,videolfb-islcmfound = <0x01>;
+		atag,videolfb-fb_base_l = "^`P";
+		atag,videolfb-fb_base_h = <0x00>;
+		bootargs = "console=tty0 console=ttyS0,921600n1 vmalloc=400M slub_debug=OFZPU page_owner=on swiotlb=noforce androidboot.hardware=mt6765 maxcpus=8 loop.max_part=7 firmware_class.path=/vendor/firmware";
+		kaslr-seed = <0x00 0x00>;
+		phandle = <0x2a>;
+	};
+};

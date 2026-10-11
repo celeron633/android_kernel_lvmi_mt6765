@@ -1,0 +1,354 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/* S17 Pro mini services configuration; included by s17promini.dtsi. */
+
+/ {
+	pmic_clock_buffer_ctrl {
+		status = "okay";
+		compatible = "mediatek,pmic_clock_buffer";
+		mediatek,clkbuf-quantity = <0x07>;
+		mediatek,clkbuf-config = <0x02 0x01 0x01 0x02 0x00 0x00 0x00>;
+		mediatek,clkbuf-driving-current = <0x01 0x01 0x01 0x01 0x01 0x01 0x01>;
+		mediatek,bblpm-support = "enable";
+		pwrap-dcxo-en = <0x188 0x00 0x188 0x01 0x188 0x00>;
+		pwrap-dcxo-cfg = <0x18c 0x19c>;
+		spm-pwr-status = <0x180 0x00 0x180 0x01>;
+		pwrap = <0x2f>;
+		sleep = <0x6a>;
+		phandle = <0xf3>;
+	};
+
+	eas {
+		eff_turn_point = <0x1d3>;
+		tiny = <0x32>;
+	};
+
+	i2c7 {
+		mediatek,use-open-drain;
+		clock-frequency = <0x61a80>;
+		#size-cells = <0x00>;
+		#address-cells = <0x01>;
+		phandle = <0xf4>;
+	};
+
+	i2c8 {
+		mediatek,use-open-drain;
+		clock-frequency = <0x61a80>;
+		#size-cells = <0x00>;
+		#address-cells = <0x01>;
+		phandle = <0xf5>;
+	};
+
+	i2c9 {
+		mediatek,use-open-drain;
+		clock-frequency = <0x61a80>;
+		#size-cells = <0x00>;
+		#address-cells = <0x01>;
+		phandle = <0xf6>;
+	};
+
+	smart_pa {
+		status = "okay";
+		interrupts = <0x07 0x08 0x07 0x00>;
+		interrupt-parent = <0x1f>;
+		phandle = <0xf7>;
+	};
+
+	md1_sim1_hot_plug_eint {
+		status = "okay";
+		sockettype = <0x00 0x00>;
+		src_pin = <0x00 0x01>;
+		dedicated = <0x00 0x00>;
+		debounce = <0x00 0x2710>;
+		interrupts = <0x00 0x08>;
+		compatible = "mediatek,md1_sim1_hot_plug_eint-eint";
+		phandle = <0xf8>;
+	};
+
+	md1_sim2_hot_plug_eint {
+		status = "okay";
+		sockettype = <0x01 0x00>;
+		src_pin = <0x01 0x02>;
+		dedicated = <0x01 0x00>;
+		debounce = <0x01 0x2710>;
+		interrupts = <0x01 0x08>;
+		compatible = "mediatek,md1_sim2_hot_plug_eint-eint";
+		phandle = <0xf9>;
+	};
+
+	cm_mgr@10200000 {
+		compatible = "mediatek,mt6765-cm_mgr";
+		reg = <0x00 0x10200000 0x00 0x4000>;
+		reg-names = "cm_mgr_base";
+		required-opps = <0x31 0x32 0x33>;
+		cm_mgr,cp_down = <0x64 0x64>;
+		cm_mgr,cp_up = <0x64 0x64>;
+		cm_mgr,dt_down = <0x00 0x03>;
+		cm_mgr,dt_up = <0x00 0x03>;
+		cm_mgr,vp_down = <0x64 0x64>;
+		cm_mgr,vp_up = <0x64 0x64>;
+		phandle = <0xfa>;
+	};
+
+	dram_ctrl {
+		compatible = "mediatek,dram-qosctrl";
+		required-opps = <0x31 0x32>;
+	};
+
+	mt6370_pmu_dts {
+		interrupt-controller;
+		#interrupt-cells = <0x01>;
+		mt6370,intr_gpio_num = <0x0b>;
+		mt6370,intr_gpio = <0x1f 0x0b 0x00>;
+		phandle = <0xfb>;
+
+		core {
+			compatible = "mediatek,mt6370_pmu_core";
+			interrupt-names = "otp", "vdda_ovp", "vdda_uv";
+			i2cstmr_rst_tmr = <0x00>;
+			mrstb_en;
+			mrstb_tmr = <0x03>;
+			int_wdt = <0x00>;
+			int_deg = <0x00>;
+		};
+
+		charger {
+			compatible = "mediatek,mt6370_pmu_charger";
+			interrupt-names = "chg_mivr", "chg_aiclmeasi", "attachi", "ovpctrl_uvp_d_evt", "chg_wdtmri", "chg_vbusov", "chg_tmri", "chg_treg", "dcdti";
+			bootmode = <0x2a>;
+			charger_name = "primary_chg";
+			load_switch_name = "primary_load_switch";
+			ichg = <0x1e8480>;
+			aicr = <0x7a120>;
+			mivr = <0x432380>;
+			cv = <0x426030>;
+			ieoc = <0x249f0>;
+			safety_timer = <0x0c>;
+			dc_wdt = "", "=\t";
+			ircmp_resistor = <0x61a8>;
+			ircmp_vclamp = <0x7d00>;
+			enable_te;
+			enable_wdt;
+			enable_otg_wdt;
+			lbp_hys_sel = <0x01>;
+			lbp_dt = <0x01>;
+			charger = <0x29>;
+			bc12_sel = <0x01>;
+			phandle = <0x29>;
+
+			usb-otg-vbus {
+				regulator-compatible = "usb-otg-vbus";
+				regulator-name = "usb-otg-vbus";
+				regulator-min-microvolt = <0x426030>;
+				regulator-max-microvolt = <0x588040>;
+				regulator-min-microamp = <0x7a120>;
+				regulator-max-microamp = <0x2dc6c0>;
+				phandle = <0x67>;
+			};
+		};
+
+		mt6370_pmu_fled1 {
+			compatible = "mediatek,mt6370_pmu_fled1";
+			interrupt-names = "fled_lvf", "fled2_short", "fled1_short";
+			fled_enable = <0x01>;
+			torch_cur = <0x493e0>;
+			strobe_cur = <0x124f80>;
+			strobe_timeout = <0x960>;
+		};
+
+		mt6370_pmu_fled2 {
+			compatible = "mediatek,mt6370_pmu_fled2";
+			fled_enable = <0x01>;
+			torch_cur = <0x30d40>;
+			strobe_cur = <0xf4240>;
+			strobe_timeout = <0x4b0>;
+		};
+
+		ldo {
+			compatible = "mediatek,mt6370_pmu_ldo";
+			interrupt-names = "ldo_oc";
+			ldo_oms = <0x01>;
+			ldo_vrc_lt = <0x01>;
+
+			mt6370_ldo {
+				regulator-name = "irtx_ldo";
+				regulator-min-microvolt = <0x186a00>;
+				regulator-max-microvolt = "", "=\t";
+			};
+		};
+
+		rgbled {
+			compatible = "mediatek,mt6370_pmu_rgbled";
+			interrupt-names = "isink4_short", "isink3_short", "isink2_short", "isink1_short", "isink4_open", "isink3_open", "isink2_open", "isink1_open";
+			mt,led_name = "mt6370_pmu_led1", "mt6370_pmu_led2", "mt6370_pmu_led3", "mt6370_pmu_led4";
+			mt,led_default_trigger = "cc_mode", "cc_mode", "cc_mode", "none";
+		};
+
+		bled {
+			compatible = "mediatek,mt6370_pmu_bled";
+			interrupt-names = "bled_ocp";
+			mt,bled_name = "mt6370_pmu_bled";
+			mt,chan_en = <0x0f>;
+			mt,map_linear;
+			mt,bl_ovp_level = <0x03>;
+			mt,bl_ocp_level = <0x02>;
+			mt,use_pwm;
+			mt,pwm_fsample = <0x02>;
+			mt,pwm_deglitch = <0x01>;
+			mt,pwm_hys_en = <0x01>;
+			mt,pwm_hys = <0x00>;
+			mt,pwm_avg_cycle = <0x00>;
+			mt,bled_ramptime = <0x03>;
+			mt,bled_flash_ramp = <0x01>;
+			mt,max_bled_brightness = <0x200>;
+			mt,bled_curr_scale = <0x00>;
+			mt,pwm_lpf_coef = <0x00>;
+		};
+
+		dsv {
+			compatible = "mediatek,mt6370_pmu_dsv";
+			interrupt-names = "dsv_vneg_ocp", "dsv_vpos_ocp", "dsv_bst_ocp", "dsv_vneg_scp", "dsv_vpos_scp";
+			db_ext_en = <0x00>;
+			db_periodic_fix = <0x00>;
+			db_single_pin = <0x00>;
+			db_freq_pm = <0x00>;
+			db_periodic_mode = <0x00>;
+			db_startup = <0x00>;
+			db_vneg_20ms = <0x01>;
+			db_vneg_disc = <0x00>;
+			db_vpos_20ms = <0x01>;
+			db_vpos_disc = <0x01>;
+			db_delay = <0x03>;
+			db_vbst = <0x1644>;
+			db_vpos_slew = <0x01>;
+			db_vneg_slew = <0x01>;
+
+			mt6370_dsvp {
+				regulator-name = "dsv_pos";
+				regulator-min-microvolt = "", "=\t";
+				regulator-max-microvolt = <0x5b8d80>;
+			};
+
+			mt6370_dsvn {
+				regulator-name = "dsv_neg";
+				regulator-min-microvolt = "", "=\t";
+				regulator-max-microvolt = <0x5b8d80>;
+			};
+		};
+	};
+
+	type_c_port0 {
+		mt-tcpc,name = "type_c_port0";
+		mt-tcpc,role_def = <0x05>;
+		mt-tcpc,rp_level = <0x01>;
+		mt-tcpc,vconn_supply = <0x01>;
+		mt-tcpc,notifier_supply_num = <0x02>;
+		mt6370pd,intr_gpio = <0x1f 0x0b 0x00>;
+		mt6370pd,intr_gpio_num = <0x0b>;
+		charger = <0x29>;
+		phandle = <0xfc>;
+
+		pd-data {
+			pd,vid = <0x29cf>;
+			pd,pid = <0x5081>;
+			pd,source-cap-ext = <0x508129cf 0x00 0x00 0x00 0x00 0x7000000>;
+			pd,mfrs = "RichtekTCPC";
+			pd,charging_policy = <0x31>;
+			pd,source-pdo-size = <0x01>;
+			pd,source-pdo-data = <0x19096>;
+			pd,sink-pdo-size = <0x01>;
+			pd,sink-pdo-data = <0x190c8>;
+			pd,id-vdo-size = <0x06>;
+			pd,id-vdo-data = <0xd14029cf 0x00 0x50810000 0x41800000 0x00 0x21800000>;
+			bat,nr = <0x01>;
+			pd,country_nr = <0x00>;
+
+			bat-info0 {
+				bat,vid = <0x29cf>;
+				bat,pid = <0x5081>;
+				bat,mfrs = "bat1";
+				bat,design_cap = <0xbb8>;
+			};
+		};
+
+		dpm_caps {
+			local_dr_power;
+			local_dr_data;
+			local_usb_comm;
+			local_no_suspend;
+			local_vconn_supply;
+			attemp_enter_dp_mode;
+			attemp_discover_cable;
+			attemp_discover_id;
+			pr_check = <0x00>;
+			dr_check = <0x00>;
+		};
+
+		displayport {
+			1st_connection = "dfp_d";
+			2nd_connection = "dfp_d";
+			signal,dp_v13;
+			typec,receptacle;
+
+			ufp_d {
+			};
+
+			dfp_d {
+				pin_assignment,mode_c;
+				pin_assignment,mode_d;
+				pin_assignment,mode_e;
+			};
+		};
+	};
+
+	trusty {
+		compatible = "android,trusty-smc-v1";
+		ranges;
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+		tee-id = <0x00>;
+		tee-name = "trusty";
+
+		mtee {
+			compatible = "mediatek,trusty-mtee-v1";
+		};
+
+		gz-main {
+			compatible = "mediatek,trusty-gz";
+		};
+
+		trusty-irq {
+			compatible = "android,trusty-irq-v1";
+			ppi-interrupt-parent = <0x16>;
+		};
+
+		trusty-virtio {
+			compatible = "android,trusty-virtio-v1";
+		};
+
+		trusty-gz-log {
+			compatible = "android,trusty-gz-log-v1";
+		};
+	};
+
+	nebula {
+		compatible = "android,nebula-smc-v1";
+		ranges;
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+		tee-id = <0x01>;
+		tee-name = "nebula";
+
+		nebula-virtio {
+			compatible = "android,nebula-virtio-v1";
+		};
+
+		nebula-irq {
+			compatible = "android,nebula-irq-v1";
+			ppi-interrupt-parent = <0x16>;
+		};
+
+		nebula-gz-log {
+			compatible = "android,nebula-gz-log-v1";
+		};
+	};
+};
